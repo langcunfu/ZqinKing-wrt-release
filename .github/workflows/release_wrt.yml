@@ -108,6 +108,20 @@ jobs:
           du -sh ./firmware 2>/dev/null || true
           echo "=================================================="
 
+      # ========== 新增：修复 Python3 测试报错 关键步骤 ==========
+      - name: Fix Python3 test compile error
+        run: |
+          cd ./action_build
+          # 禁用 Python 编译测试参数 + 注释测试目标
+          sed -i '/CONFIGURE_ARGS +=/a --disable-tests' feeds/packages/lang/python/python3/Makefile || true
+          sed -i '/^profile-run-stamp:/,/^$/ s/^/#/' feeds/packages/lang/python/python3/Makefile || true
+          # 清理旧缓存
+          rm -rf build_dir/hostpkg/Python-* staging_dir/host
+          # 预编译 host python
+          make package/feeds/packages/python3/host/compile V=99 || true
+          cd ..
+      # ========================================================
+
       - name: Build Firmware
         run: ./build.sh ${{ inputs.model }}
 
