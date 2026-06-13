@@ -1,8 +1,5 @@
 name: OpenWrt-京东云RE-CS-02-自动编译
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
