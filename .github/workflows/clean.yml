@@ -1,0 +1,33 @@
+name: OpenWrt-京东云RE-CS-02-自动编译
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1440
+
+    steps:
+      - name: 检查代码
+        uses: actions/checkout@v4
+
+      - name: 显示初始磁盘空间
+        run: df -h
+
+      - name: 彻底清理系统空间（关键！防报错）
+        run: |
+          docker rmi $(docker images -q)
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf /usr/share/swift
+          sudo apt clean
+          sudo apt autoremove -y
+          sudo apt autoclean
+
+      - name: 清理后显示空间
+        run: df -h
