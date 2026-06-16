@@ -209,6 +209,16 @@ remove_uhttpd_dependency
 cd "$BASE_PATH/../$BUILD_DIR"
 make defconfig
 
+# ========== 新增代码开始 ==========
+if [ -d "feeds/packages/lang/python/python3" ]; then
+  sed -i '/define Build\/Test/,/endef/ s/^/#/' feeds/packages/lang/python/python3/Makefile
+  sed -i 's/$(MAKE) .*profile-run//g' feeds/packages/lang/python/python3/Makefile
+  sed -i '/CONFIGURE_ARGS +=/a --without-tests --disable-tests' feeds/packages/lang/python/python3/Makefile
+fi
+rm -rf build_dir/hostpkg/Python-* staging_dir/host staging_dir/hostpkg
+find . -name "*python3*stamp" -delete
+# ========== 新增代码结束 ==========
+
 if grep -qE "^CONFIG_TARGET_x86_64=y" "$CONFIG_FILE"; then
     DISTFEEDS_PATH="$BASE_PATH/../$BUILD_DIR/package/emortal/default-settings/files/99-distfeeds.conf"
     if [ -d "${DISTFEEDS_PATH%/*}" ] && [ -f "$DISTFEEDS_PATH" ]; then
