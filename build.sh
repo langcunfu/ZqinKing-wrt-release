@@ -235,14 +235,9 @@ if [[ -d $TARGET_DIR ]]; then
     find "$TARGET_DIR" -type f \( -name "*.bin" -o -name "*.manifest" -o -name "*efi.img.gz" -o -name "*.itb" -o -name "*.fip" -o -name "*.ubi" -o -name "*rootfs.tar.gz" \) -exec rm -f {} +
 fi
 
-# 【修改1】降低下载线程，减少磁盘IO负载
-make download -j2
-
-# 【修改2】优先单线程编译无线内核模块，规避多线程内存溢出
-make -j1 package/kernel/mac80211/compile V=s
-
-# 【修改3】整体编译，失败自动切换单线程详细日志编译
-make -j2 world || make -j1 V=s
+# 全部单线程编译，规避内存不足导致toolchain崩溃
+make download -j1
+make -j1 V=s
 
 FIRMWARE_DIR="$BASE_PATH/../firmware"
 \rm -rf "$FIRMWARE_DIR"
