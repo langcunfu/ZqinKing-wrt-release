@@ -171,32 +171,32 @@ fix_mkpkg_format_invalid() {
 }
 
 
-#update_tcping() {
-#    local tcping_path="$(get_custom_feed_worktree_dir)/tcping/Makefile"
-#    local url="https://raw.githubusercontent.com/Openwrt-Passwall/openwrt-passwall-packages/refs/heads/main/tcping/Makefile"
-#
-#    if [ -d "$(dirname "$tcping_path")" ]; then
-#        echo "正在更新 tcping Makefile..."
-#        if ! curl_retry -fsSL -o "$tcping_path" "$url"; then
-#            echo "错误：从 $url 下载 tcping Makefile 失败" >&2
-#            exit 1
-#        fi
-#    fi
-#}
-#
-#
-#apply_passwall_tweaks() {
-#    local chnlist_path="$(get_custom_feed_worktree_dir)/luci-app-passwall/root/usr/share/passwall/rules/chnlist"
-#    if [ -f "$chnlist_path" ]; then
-#        >"$chnlist_path"
-#    fi
-#
-#    local xray_util_path="$(get_custom_feed_worktree_dir)/luci-app-passwall/luasrc/passwall/util_xray.lua"
-#    if [ -f "$xray_util_path" ]; then
-#        sed -i 's/maxRTT = "1s"/maxRTT = "2s"/g' "$xray_util_path"
-#        sed -i 's/sampling = 3/sampling = 5/g' "$xray_util_path"
-#    fi
-#}
+update_tcping() {
+    local tcping_path="$(get_custom_feed_worktree_dir)/tcping/Makefile"
+    local url="https://raw.githubusercontent.com/Openwrt-Passwall/openwrt-passwall-packages/refs/heads/main/tcping/Makefile"
+
+    if [ -d "$(dirname "$tcping_path")" ]; then
+        echo "正在更新 tcping Makefile..."
+        if ! curl_retry -fsSL -o "$tcping_path" "$url"; then
+            echo "错误：从 $url 下载 tcping Makefile 失败" >&2
+            exit 1
+        fi
+    fi
+}
+
+
+apply_passwall_tweaks() {
+    local chnlist_path="$(get_custom_feed_worktree_dir)/luci-app-passwall/root/usr/share/passwall/rules/chnlist"
+    if [ -f "$chnlist_path" ]; then
+        >"$chnlist_path"
+    fi
+
+    local xray_util_path="$(get_custom_feed_worktree_dir)/luci-app-passwall/luasrc/passwall/util_xray.lua"
+    if [ -f "$xray_util_path" ]; then
+        sed -i 's/maxRTT = "1s"/maxRTT = "2s"/g' "$xray_util_path"
+        sed -i 's/sampling = 3/sampling = 5/g' "$xray_util_path"
+    fi
+}
 
 
 update_mosdns_deconfig() {
