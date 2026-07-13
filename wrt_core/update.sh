@@ -24,7 +24,7 @@ FEEDS_CONF="feeds.conf.default"
 GOLANG_REPO="https://github.com/sbwml/packages_lang_golang"
 GOLANG_BRANCH="26.x"
 THEME_SET="argon"
-LAN_ADDR="192.168.1.1"
+LAN_ADDR="192.168.17.1"
 
 SCRIPT_DIR=$(cd $(dirname $0) && pwd)
 BASE_PATH=${BASE_PATH:-$SCRIPT_DIR}
@@ -83,10 +83,10 @@ stage_pre_install_source_fixes() {
     update_ath11k_fw
     # fix_mkpkg_format_invalid
     change_cpuusage
-    update_tcping
+    #update_tcping
     add_ax6600_led
     set_custom_task
-    apply_passwall_tweaks
+    #apply_passwall_tweaks
     update_nss_pbuf_performance
     set_build_signature
     update_nss_diag
