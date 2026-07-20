@@ -171,7 +171,7 @@ install_custom_feed() {
         luci-app-quickstart luci-app-store luci-app-homeproxy luci-app-mosdns
         luci-app-passwall nikki luci-app-nikki mihomo-meta
         open-app-filter luci-app-oaf lucky luci-app-lucky luci-app-easytier
-        luci-app-emmc-health
+        luci-app-emmc-health linkease luci-app-linkease
     )
     local custom_feed_sources=()
     local missing_feed_dirs=()
@@ -195,6 +195,10 @@ install_custom_feed() {
         "sbwml/luci-app-mosdns|https://github.com/sbwml/luci-app-mosdns.git|v5|mosdns luci-app-mosdns"
         "Openwrt-Passwall/openwrt-passwall|https://github.com/Openwrt-Passwall/openwrt-passwall.git|main|luci-app-passwall"
         "nikkinikki-org/OpenWrt-nikki|https://github.com/nikkinikki-org/OpenWrt-nikki.git|main|nikki luci-app-nikki mihomo-meta"
+        # 新增易有云后端主程序仓库 nas 分支master
+        "linkease/nas-packages|https://github.com/linkease/nas-packages.git|master|network/services/linkease network/services/linkmount"
+        # 新增易有云LuCI界面仓库 nas\_luci 分支main
+        "linkease/nas-packages-luci|https://github.com/linkease/nas-packages-luci.git|main|luci/luci-app-linkease"
     )
 
     feeds_path=$(get_feeds_path)
