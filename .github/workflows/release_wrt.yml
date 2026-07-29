@@ -18,6 +18,7 @@ on:
           - clx_s20p_immwrt
           - MEDIATEK-WIFI-NO
           - MEDIATEK-WIFI-YES
+          - NSY_G68_immwrt
           - jdcloud_ipq60xx_immwrt
           - jdcloud_ipq60xx_libwrt
           - link_nn6000v2_immwrt
