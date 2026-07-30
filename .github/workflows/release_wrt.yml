@@ -77,9 +77,6 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v7.0.0
-        with:
-          fetch-depth: 0          # 拉取全部commit，取消浅克隆
-          sparse-checkout: false  # 关闭稀疏过滤，完整拉取所有文件
 
       - name: Set Build Date and Timezone
         env:
