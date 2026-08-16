@@ -239,7 +239,7 @@ add_quickfile() {
 
 
 update_argon() {
-    local repo_url="https://github.com/kenzok8/small-package/tree/main/luci-theme-argon.git"
+    local repo_url="https://github.com/langcunfu/luci-theme-argon.git"
     local dst_theme_path="$BUILD_DIR/feeds/luci/themes/luci-theme-argon"
     local tmp_dir
     tmp_dir=$(mktemp -d)
