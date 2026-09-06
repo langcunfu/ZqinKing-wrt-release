@@ -18,8 +18,10 @@ on:
           - clx_s20p_immwrt
           - MEDIATEK-WIFI-NO
           - MEDIATEK-WIFI-YES
+          - MEDIATEK-WIFI-YES_dae
           - NSY_G68_immwrt
           - jdcloud_ipq60xx_immwrt
+          - jdcloud_ipq60xx_immwrt_dae
           - jdcloud_ipq60xx_libwrt
           - link_nn6000v2_immwrt
           - linksys_mx4x00_immwrt
