@@ -156,8 +156,15 @@ jobs:
 
       - name: Delete Old Cache
         run: |
+          # shell内部计算repo_flag哈希，绕开github hashFiles函数超时限制
+          if [ -f "./repo_flag" ]; then
+            RF_HASH=$(md5sum ./repo_flag | awk '{print $1}')
+          else
+            RF_HASH="empty"
+          fi
+          CACHE_KEY="${{ matrix.os }}-${{ inputs.model }}-${RF_HASH}-"
           # 获取缓存列表并删除
-          gh cache list --key ${{ matrix.os }}-${{ inputs.model }}-${{ hashFiles('**/repo_flag') }}- --json key --jq '.[] | .key' | while read -r key; do
+          gh cache list --key "${CACHE_KEY}" --json key --jq '.[] | .key' | while read -r key; do
             gh cache delete "$key"
           done
           # 输出缓存状态
