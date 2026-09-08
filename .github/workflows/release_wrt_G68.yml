@@ -80,6 +80,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7.0.0
 
+        # =====================【新增步骤：升级 CMake 3.31+】=====================
+      - name: Upgrade CMake >=3.31
+        run: |
+          sudo apt remove --purge cmake -y
+          pip3 install cmake==3.31.5
+          cmake --version
+      # =====================================================================
+
       - name: Set Build Date and Timezone
         env:
           RAW_ADD_CONFIG_FRAGMENTS: ${{ inputs.add_fragments }}
@@ -97,12 +105,14 @@ jobs:
       - name: Pre Clone
         run: ./wrt_core/pre_clone_action.sh ${{ inputs.model }}
 
+      # ----------------【重要缓存修复】排除 staging_dir/host，旧host产物会绕过高版本cmake ----------------
       - name: Cache Dependencies
         uses: actions/cache@v6.1.0
         with:
           path: |
             ./action_build/.ccache
             ./action_build/staging_dir
+            !./action_build/staging_dir/host
           key: ${{ matrix.os }}-${{ inputs.model }}-${{ hashFiles('**/repo_flag') }}-${{ env.ADD_CONFIG_FRAGMENTS_KEY }}-${{ env.REMOVE_CONFIG_FRAGMENTS_KEY }}-${{ env.BUILD_DATE }}
           restore-keys: |
             ${{ matrix.os }}-${{ inputs.model }}-${{ hashFiles('**/repo_flag') }}-${{ env.ADD_CONFIG_FRAGMENTS_KEY }}-${{ env.REMOVE_CONFIG_FRAGMENTS_KEY }}-
