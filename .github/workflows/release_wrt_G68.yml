@@ -84,7 +84,7 @@ jobs:
       - name: Upgrade CMake >=3.31
         run: |
           sudo apt remove --purge cmake -y
-          pip3 install cmake==3.31.5
+          pip3 install cmake==3.31.4
           cmake --version
       # =====================================================================
 
