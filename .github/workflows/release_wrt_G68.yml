@@ -88,6 +88,15 @@ jobs:
           cmake --version
       # =====================================================================
 
+      - name: Fix host‑python3 for mt‑wifi
+        run: |
+          # 清理旧host python缓存，防止旧损坏产物
+          rm -rf ./action_build/staging_dir/host/python*
+          rm -rf ./action_build/build_dir/host/python*
+          # 安装host‑python3编译需要的系统库（解决 _bz2/_ssl 模块编译失败）
+          sudo apt update -y
+          sudo apt install -y libbz2-dev libssl-dev libsqlite3-dev tk-dev libreadline-dev
+
       - name: Set Build Date and Timezone
         env:
           RAW_ADD_CONFIG_FRAGMENTS: ${{ inputs.add_fragments }}
