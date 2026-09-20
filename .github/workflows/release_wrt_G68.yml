@@ -20,6 +20,7 @@ on:
           - MEDIATEK-WIFI-YES
           - MEDIATEK-WIFI-YES_dae
           - NSY_G68_immwrt
+          - NSY_G68_dsa
           - jdcloud_ipq60xx_immwrt
           - jdcloud_ipq60xx_immwrt_dae
           - jdcloud_ipq60xx_libwrt

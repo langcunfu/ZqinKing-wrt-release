@@ -42,6 +42,7 @@ source "$SCRIPT_DIR/modules/feed_source_fixes.sh"
 source "$SCRIPT_DIR/modules/package_source_updates.sh"
 source "$SCRIPT_DIR/modules/target_fixes.sh"
 source "$SCRIPT_DIR/modules/device_nsy_g68.sh"
+source "$SCRIPT_DIR/modules/device_nsy_g68_dsa.sh"
 source "$SCRIPT_DIR/modules/luci_fixes.sh"
 source "$SCRIPT_DIR/modules/service_fixes.sh"
 
@@ -119,6 +120,8 @@ stage_pre_install_source_fixes() {
 
     # NSY G68-PLUS 设备支持注入 (仅 NSY_G68_immwrt 生效)
     add_nsy_g68_device_support
+    # NSY G68-PLUS DSA 变体注入 (仅 NSY_G68_dsa 生效)
+    add_nsy_g68_dsa_device_support
 }
 
 stage_feeds_install() {

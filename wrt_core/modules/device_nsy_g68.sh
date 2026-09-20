@@ -58,14 +58,14 @@ inject_nsy_g68_kernel_dts() {
 # 2. 镜像定义: 向 armv8.mk 追加 Device/nsy_g68-plus
 inject_nsy_g68_image_def() {
     local armv8_mk="$BUILD_DIR/target/linux/rockchip/image/armv8.mk"
-    local marker="Device/nsy_g68-plus"
+    local marker="define Device/nsy_g68-plus"
 
     [[ -f "$armv8_mk" ]] || {
         echo "Error: [NSY_G68] 找不到 armv8.mk: $armv8_mk" >&2
         return 1
     }
 
-    if ! grep -q "$marker" "$armv8_mk"; then
+    if ! grep -qE "^define Device/nsy_g68-plus$" "$armv8_mk"; then
         cat >> "$armv8_mk" <<'EOF'
 
 # ============ NSY G68-PLUS (由 device_nsy_g68.sh 注入) ============
@@ -164,7 +164,7 @@ inject_nsy_g68_board_files() {
     }
 
     # 5a. 02_network: 第1个 esac 前插入接口定义, 第2个 esac 前插入 MAC 定义
-    if ! grep -q "nsy,g68-plus" "$net_file"; then
+    if ! grep -q "nsy,g68-plus)" "$net_file"; then
         awk '
             /^[[:space:]]*esac$/ && !int_done {
                 print "\tnsy,g68-plus)"
@@ -187,7 +187,7 @@ inject_nsy_g68_board_files() {
     fi
 
     # 5b. 40-net-smp-affinity: 末尾 esac 前插入 G68 条目
-    if [[ -f "$smp_file" ]] && ! grep -q "nsy,g68-plus" "$smp_file"; then
+    if [[ -f "$smp_file" ]] && ! grep -q "nsy,g68-plus)" "$smp_file"; then
         awk '
             /^[[:space:]]*esac$/ && !smp_done {
                 print "nsy,g68-plus)"
