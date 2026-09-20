@@ -122,11 +122,25 @@ stage_pre_install_source_fixes() {
     add_nsy_g68_device_support
     # NSY G68-PLUS DSA 变体注入 (仅 NSY_G68_dsa 生效)
     add_nsy_g68_dsa_device_support
+    # 上游失效补丁清理: VIKINGYFY rockchip/800-hwrng 的修复已合入 6.18.52 主线,
+    # 保留会导致所有 rockchip 目标内核补丁应用失败, 构建时禁用。
+    disable_stale_hwrng_patch
 }
 
 stage_feeds_install() {
     # install 后才会生成 package/feeds/*。
     install_feeds
+}
+
+# VIKINGYFY rockchip/800-hwrng 补丁的修复 (dev_err_probe) 已合入 6.18.52 主线,
+# 该补丁在 6.18.52 上应用必然失败且功能冗余; 构建时改名为 .disabled 跳过。
+disable_stale_hwrng_patch() {
+    local patch_file
+    patch_file=$(ls "$BUILD_DIR"/target/linux/rockchip/patches-*/800-hwrng-*.patch 2>/dev/null | head -1)
+    if [[ -n "$patch_file" && -f "$patch_file" && "$patch_file" != *.disabled ]]; then
+        mv "$patch_file" "$patch_file.disabled"
+        echo "  [上游修复] 已禁用失效补丁: $(basename "$patch_file") (修复已合入 6.18.52 主线)"
+    fi
 }
 
 stage_post_install_package_fixes() {
