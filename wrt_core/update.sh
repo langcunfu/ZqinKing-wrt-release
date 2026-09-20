@@ -14,6 +14,7 @@ REPO_URL=$1
 REPO_BRANCH=$2
 BUILD_DIR=$3
 COMMIT_HASH=$4
+DEV_NAME=$5
 
 # 转换为绝对路径，避免后续 cd 后路径失效。
 if [[ "$BUILD_DIR" != /* ]]; then
@@ -40,6 +41,7 @@ source "$SCRIPT_DIR/modules/cups.sh"
 source "$SCRIPT_DIR/modules/feed_source_fixes.sh"
 source "$SCRIPT_DIR/modules/package_source_updates.sh"
 source "$SCRIPT_DIR/modules/target_fixes.sh"
+source "$SCRIPT_DIR/modules/device_nsy_g68.sh"
 source "$SCRIPT_DIR/modules/luci_fixes.sh"
 source "$SCRIPT_DIR/modules/service_fixes.sh"
 
@@ -114,6 +116,9 @@ stage_pre_install_source_fixes() {
     fix_easytier_mk
     remove_attendedsysupgrade
     fix_kconfig_recursive_dependency
+
+    # NSY G68-PLUS 设备支持注入 (仅 NSY_G68_immwrt 生效)
+    add_nsy_g68_device_support
 }
 
 stage_feeds_install() {
