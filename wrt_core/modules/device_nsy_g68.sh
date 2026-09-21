@@ -63,10 +63,12 @@ s = s.replace('ALIGN="$6"', 'ALIGN="$6"\nUSERDATASIZE="${USERDATASIZE:-2048}"', 
 # 2) ptgen 增加第三个分区 (rootfs_data)
 s = s.replace('-p "${ROOTFSSIZE}m"',
               '-p "${ROOTFSSIZE}m" -t "${ROOTFSPARTTYPE}" -p "${USERDATASIZE}m"', 1)
-# 3) 解析第三分区 offset/size (ptgen 输出 $5/$6, 均为字节)
+# 3) 解析第三分区 offset/size (ptgen 输出 $5/$6 为字节; USERDATASIZE 转扇区,
+#    参照 zhoufuli 原版: make_ext4fs -l 按字节解释扇区数 -> ext4 实际约 4MiB,
+#    分区表仍为 2048MiB, 镜像文件保持 ~236MiB 可传入设备 /tmp)
 s = s.replace('ROOTFSOFFSET="$(($3 / 512))"\nROOTFSSIZE="$(($4 / 512))"',
               'ROOTFSOFFSET="$(($3 / 512))"\nROOTFSSIZE="$(($4 / 512))"\n'
-              'USERDATAOFFSET="$(($5 / 512))"\nUSERDATASIZE="$6"', 1)
+              'USERDATAOFFSET="$(($5 / 512))"\nUSERDATASIZE="$(($6 / 512))"', 1)
 # 4) rootfs 写入后, 生成 ext4 rootfs_data 并写入第三分区
 s = s.replace('dd if="$ROOTFSIMAGE" of="$OUTPUT" bs=512 seek="$ROOTFSOFFSET" conv=notrunc\n',
               'dd if="$ROOTFSIMAGE" of="$OUTPUT" bs=512 seek="$ROOTFSOFFSET" conv=notrunc\n\n'
@@ -77,7 +79,7 @@ if s == orig:
     print('Error: gen_image_generic.sh 替换未生效, 脚本结构可能已变化', file=sys.stderr)
     sys.exit(1)
 open(path, 'w').write(s)
-print('  [板级] 已注入 gen_image_generic.sh: rootfs_data 第三分区 (2048MiB, 卷标 rootfs_data)')
+print('  [板级] 已注入 gen_image_generic.sh: rootfs_data 第三分区 (分区表 2048MiB, 镜像文件保持 ~236MiB)')
 PYEOF
 }
 
