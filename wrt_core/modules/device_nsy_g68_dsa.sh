@@ -145,11 +145,11 @@ inject_nsy_g68_dsa_uboot() {
         echo "  [U-Boot] 已安装 DSA defconfig"
     fi
 
-    # 3b. u-boot.dtsi (OF_UPSTREAM 专用覆盖: eMMC HS400)
-    if [[ ! -f "$uboot_dir/src/arch/arm/dts/rockchip/rk3568-nsy-g68-plus-dsa-u-boot.dtsi" ]]; then
+    # 3b. u-boot.dtsi (U-Boot 从 arch/arm/dts/ 顶层查找 *-u-boot.dtsi)
+    if [[ ! -f "$uboot_dir/src/arch/arm/dts/rk3568-nsy-g68-plus-dsa-u-boot.dtsi" ]]; then
         install -Dm644 "$NSY_G68_DSA_ASSETS/uboot/rk3568-nsy-g68-plus-dsa-u-boot.dtsi" \
-            "$uboot_dir/src/arch/arm/dts/rockchip/rk3568-nsy-g68-plus-dsa-u-boot.dtsi"
-        echo "  [U-Boot] 已安装 DSA u-boot.dtsi"
+            "$uboot_dir/src/arch/arm/dts/rk3568-nsy-g68-plus-dsa-u-boot.dtsi"
+        echo "  [U-Boot] 已安装 DSA u-boot.dtsi (arch/arm/dts/)"
     fi
 
     # 3c. Makefile 设备定义
@@ -199,19 +199,28 @@ print('  [U-Boot] 已加入 UBOOT_TARGETS: nsy-g68-plus-dsa-rk3568')
 PYEOF
     fi
 
-    # 3e. OF_UPSTREAM DTS: U-Boot 2026.07 默认从 dts/upstream 编译设备树,
-    # 自定义 DSA DTS 必须放入 dts/upstream/src/arm64/rockchip/ (否则 arch-dtbs 失败)
+    # 3e. OF_UPSTREAM DTS: U-Boot 2026.07 默认从 dts/upstream 编译设备树。
+    # 内核 DTS 基于 6.18 (含 &xpcs 节点), 但 U-Boot 快照 (rk3568.dtsi) 无 xpcs,
+    # 生成 U-Boot 专用 DTS: 去掉 &xpcs 引用 (U-Boot 不需要 PCS 配置)。
     local upstream_dts_dir="$uboot_dir/src/dts/upstream/src/arm64/rockchip"
     mkdir -p "$upstream_dts_dir"
     if [[ ! -f "$upstream_dts_dir/rk3568-nsy-g68-plus-dsa.dts" ]]; then
-        install -m644 "$NSY_G68_DSA_ASSETS/kernel/rk3568-nsy-g68-plus-dsa.dts" \
-            "$upstream_dts_dir/rk3568-nsy-g68-plus-dsa.dts"
-        echo "  [U-Boot] 已安装 OF_UPSTREAM DSA DTS -> dts/upstream/src/arm64/rockchip/"
-    fi
-    if [[ ! -f "$upstream_dts_dir/rk3568-nsy-g68-plus-dsa-u-boot.dtsi" ]]; then
-        install -m644 "$NSY_G68_DSA_ASSETS/uboot/rk3568-nsy-g68-plus-dsa-u-boot.dtsi" \
-            "$upstream_dts_dir/rk3568-nsy-g68-plus-dsa-u-boot.dtsi"
-        echo "  [U-Boot] 已安装 OF_UPSTREAM DSA u-boot.dtsi"
+        python3 - "$NSY_G68_DSA_ASSETS/kernel/rk3568-nsy-g68-plus-dsa.dts" \
+            "$upstream_dts_dir/rk3568-nsy-g68-plus-dsa.dts" <<'PYEOF'
+import re, sys
+src, dst = sys.argv[1], sys.argv[2]
+s = open(src).read()
+# 删除 &xpcs { ... }; 整块
+s2 = re.sub(r'&xpcs\s*\{[^}]*\};', '', s)
+# 删除 gmac 里 rockchip,xpcs = <&xpcs>; 属性行
+s2 = s2.replace('rockchip,xpcs = <&xpcs>;', '')
+# 兜底: 清除残留的 &xpcs 引用
+s2 = re.sub(r'&xpcs\b', '', s2)
+if s2 == s:
+    print('Warning: DSA DTS 未找到 xpcs 引用, 可能结构已变', file=sys.stderr)
+open(dst, 'w').write(s2)
+print('  [U-Boot] 已生成 U-Boot 版 DSA DTS (去掉 &xpcs)')
+PYEOF
     fi
 }
 
