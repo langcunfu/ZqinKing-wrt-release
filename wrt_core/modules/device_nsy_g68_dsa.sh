@@ -60,28 +60,18 @@ if 'USERDATASIZE' in s:
     print('  [板级] gen_image_generic.sh 已含 USERDATA 分区, 跳过')
     sys.exit(0)
 orig = s
-# 1) 定义 USERDATA 大小 (固定 2048MiB, 与 zhoufuli NSY 固件一致)
+# 1) 定义 USERDATA 大小 (固定 2048MiB, 分区表第三分区; 与 zhoufuli NSY 固件一致)
 s = s.replace('ALIGN="$6"', 'ALIGN="$6"\nUSERDATASIZE="${USERDATASIZE:-2048}"', 1)
-# 2) ptgen 增加第三个分区 (rootfs_data)
+# 2) ptgen 增加第三个分区 (rootfs_data 2048MiB)
+#    注意: 分区内容留空(不写入 ext4/f2fs 数据), 镜像文件保持 ~232MiB 可传入设备 /tmp;
+#    刷机后首次启动由 fstools 检测无文件系统 -> 自动 mkfs 整个分区 -> overlay 2GiB
 s = s.replace('-p "${ROOTFSSIZE}m"',
               '-p "${ROOTFSSIZE}m" -t "${ROOTFSPARTTYPE}" -p "${USERDATASIZE}m"', 1)
-# 3) 解析第三分区 offset/size (ptgen 输出 $5/$6 为字节; USERDATASIZE 转扇区,
-#    参照 zhoufuli 原版: make_ext4fs -l 按字节解释扇区数 -> ext4 实际约 4MiB,
-#    分区表仍为 2048MiB, 镜像文件保持 ~236MiB 可传入设备 /tmp)
-s = s.replace('ROOTFSOFFSET="$(($3 / 512))"\nROOTFSSIZE="$(($4 / 512))"',
-              'ROOTFSOFFSET="$(($3 / 512))"\nROOTFSSIZE="$(($4 / 512))"\n'
-              'USERDATAOFFSET="$(($5 / 512))"\nUSERDATASIZE="$(($6 / 512))"', 1)
-# 4) rootfs 写入后, 生成 ext4 rootfs_data 并写入第三分区
-s = s.replace('dd if="$ROOTFSIMAGE" of="$OUTPUT" bs=512 seek="$ROOTFSOFFSET" conv=notrunc\n',
-              'dd if="$ROOTFSIMAGE" of="$OUTPUT" bs=512 seek="$ROOTFSOFFSET" conv=notrunc\n\n'
-              'make_ext4fs -J -L rootfs_data -l "$USERDATASIZE" "$OUTPUT.rootfs_data"\n'
-              'dd if="$OUTPUT.rootfs_data" of="$OUTPUT" bs=512 seek="$USERDATAOFFSET" conv=notrunc\n'
-              'rm -f "$OUTPUT.rootfs_data"\n', 1)
 if s == orig:
     print('Error: gen_image_generic.sh 替换未生效, 脚本结构可能已变化', file=sys.stderr)
     sys.exit(1)
 open(path, 'w').write(s)
-print('  [板级] 已注入 gen_image_generic.sh: rootfs_data 第三分区 (分区表 2048MiB, 镜像文件保持 ~236MiB)')
+print('  [板级] 已注入 gen_image_generic.sh: rootfs_data 第三分区 (分区表 2048MiB, 内容留空, 首次启动自动格式化 overlay)')
 PYEOF
 }
 
