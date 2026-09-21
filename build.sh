@@ -439,6 +439,13 @@ remove_uhttpd_dependency
 cd "$BASE_PATH/../$BUILD_DIR"
 make defconfig
 
+# 强制 RootFS 分区大小: 防止上游/环境将 CONFIG_TARGET_ROOTFS_PARTSIZE 规范化为
+# 过小的默认值, 导致 root.ext4 镜像空间不足 (G68 rootfs 未压缩约 520MB)。
+if grep -q "^CONFIG_TARGET_ROOTFS_PARTSIZE=" .config; then
+    sed -i 's/^CONFIG_TARGET_ROOTFS_PARTSIZE=.*/CONFIG_TARGET_ROOTFS_PARTSIZE=1024/' .config
+    echo "Force CONFIG_TARGET_ROOTFS_PARTSIZE=1024 (MiB) for stable rootfs image."
+fi
+
 if grep -qE "^CONFIG_TARGET_x86_64=y" "$CONFIG_FILE"; then
     DISTFEEDS_PATH="$BASE_PATH/../$BUILD_DIR/package/emortal/default-settings/files/99-distfeeds.conf"
     if [ -d "${DISTFEEDS_PATH%/*}" ] && [ -f "$DISTFEEDS_PATH" ]; then
