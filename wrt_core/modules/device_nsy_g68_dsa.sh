@@ -198,6 +198,21 @@ open(path, 'w').write('\n'.join(lines))
 print('  [U-Boot] 已加入 UBOOT_TARGETS: nsy-g68-plus-dsa-rk3568')
 PYEOF
     fi
+
+    # 3e. OF_UPSTREAM DTS: U-Boot 2026.07 默认从 dts/upstream 编译设备树,
+    # 自定义 DSA DTS 必须放入 dts/upstream/src/arm64/rockchip/ (否则 arch-dtbs 失败)
+    local upstream_dts_dir="$uboot_dir/src/dts/upstream/src/arm64/rockchip"
+    mkdir -p "$upstream_dts_dir"
+    if [[ ! -f "$upstream_dts_dir/rk3568-nsy-g68-plus-dsa.dts" ]]; then
+        install -m644 "$NSY_G68_DSA_ASSETS/kernel/rk3568-nsy-g68-plus-dsa.dts" \
+            "$upstream_dts_dir/rk3568-nsy-g68-plus-dsa.dts"
+        echo "  [U-Boot] 已安装 OF_UPSTREAM DSA DTS -> dts/upstream/src/arm64/rockchip/"
+    fi
+    if [[ ! -f "$upstream_dts_dir/rk3568-nsy-g68-plus-dsa-u-boot.dtsi" ]]; then
+        install -m644 "$NSY_G68_DSA_ASSETS/uboot/rk3568-nsy-g68-plus-dsa-u-boot.dtsi" \
+            "$upstream_dts_dir/rk3568-nsy-g68-plus-dsa-u-boot.dtsi"
+        echo "  [U-Boot] 已安装 OF_UPSTREAM DSA u-boot.dtsi"
+    fi
 }
 
 # 4. 板级网络配置: 02_network (DSA 接口) + 40-net-smp-affinity

@@ -196,6 +196,21 @@ open(path, 'w').write('\n'.join(lines))
 print('  [U-Boot] 已加入 UBOOT_TARGETS: nsy-g68-plus-rk3568')
 PYEOF
     fi
+
+    # 3e. OF_UPSTREAM DTS: U-Boot 2026.07 默认从 dts/upstream 编译设备树,
+    # 自定义 DTS 必须放入 dts/upstream/src/arm64/rockchip/ (否则 arch-dtbs 失败)
+    local upstream_dts_dir="$uboot_dir/src/dts/upstream/src/arm64/rockchip"
+    mkdir -p "$upstream_dts_dir"
+    if [[ ! -f "$upstream_dts_dir/rk3568-nsy-g68-plus.dts" ]]; then
+        install -m644 "$NSY_G68_ASSETS/kernel/rk3568-nsy-g68-plus.dts" \
+            "$upstream_dts_dir/rk3568-nsy-g68-plus.dts"
+        echo "  [U-Boot] 已安装 OF_UPSTREAM DTS -> dts/upstream/src/arm64/rockchip/"
+    fi
+    if [[ ! -f "$upstream_dts_dir/rk3568-nsy-g68-plus-u-boot.dtsi" ]]; then
+        install -m644 "$NSY_G68_ASSETS/uboot/rk3568-nsy-g68-plus-u-boot.dtsi" \
+            "$upstream_dts_dir/rk3568-nsy-g68-plus-u-boot.dtsi"
+        echo "  [U-Boot] 已安装 OF_UPSTREAM u-boot.dtsi"
+    fi
 }
 
 # 4. RTL8367S 交换驱动 (OpenWrt swconfig rtl8367b 驱动族)
