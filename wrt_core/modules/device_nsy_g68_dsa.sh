@@ -37,8 +37,50 @@ add_nsy_g68_dsa_device_support() {
     inject_nsy_g68_dsa_image_def
     inject_nsy_g68_dsa_uboot
     inject_nsy_g68_dsa_board_files
+    inject_nsy_g68_dsa_userdata_partition
 
     echo "==> [NSY_G68_DSA] 设备支持注入完成"
+}
+
+# 移植 zhoufuli 的 USERDATA 机制: G68 eMMC 为 256GB, OpenWrt 默认会把剩余空间
+# 全部扩展为 overlay; 这里给镜像增加第三个分区 (ext4, 卷标 rootfs_data, 固定 2048MiB),
+# OpenWrt 按卷标将其挂载为 overlay, 剩余空间保持未分配。
+inject_nsy_g68_dsa_userdata_partition() {
+    local script="$BUILD_DIR/scripts/gen_image_generic.sh"
+    [[ -f "$script" ]] || {
+        echo "Error: [NSY_G68_DSA] 找不到 $script" >&2
+        return 1
+    }
+
+    python3 - "$script" <<'PYEOF'
+import sys
+path = sys.argv[1]
+s = open(path).read()
+if 'USERDATASIZE' in s:
+    print('  [板级] gen_image_generic.sh 已含 USERDATA 分区, 跳过')
+    sys.exit(0)
+orig = s
+# 1) 定义 USERDATA 大小 (固定 2048MiB, 与 zhoufuli NSY 固件一致)
+s = s.replace('ALIGN="$6"', 'ALIGN="$6"\nUSERDATASIZE="${USERDATASIZE:-2048}"', 1)
+# 2) ptgen 增加第三个分区 (rootfs_data)
+s = s.replace('-p "${ROOTFSSIZE}m"',
+              '-p "${ROOTFSSIZE}m" -t "${ROOTFSPARTTYPE}" -p "${USERDATASIZE}m"', 1)
+# 3) 解析第三分区 offset/size (ptgen 输出 $5/$6)
+s = s.replace('ROOTFSOFFSET="$(($3 / 512))"\nROOTFSSIZE="$(($4 / 512))"',
+              'ROOTFSOFFSET="$(($3 / 512))"\nROOTFSSIZE="$(($4 / 512))"\n'
+              'USERDATAOFFSET="$(($5 / 512))"\nUSERDATASIZE="$(($6 / 512))"', 1)
+# 4) rootfs 写入后, 生成 ext4 rootfs_data 并写入第三分区
+s = s.replace('dd if="$ROOTFSIMAGE" of="$OUTPUT" bs=512 seek="$ROOTFSOFFSET" conv=notrunc\n',
+              'dd if="$ROOTFSIMAGE" of="$OUTPUT" bs=512 seek="$ROOTFSOFFSET" conv=notrunc\n\n'
+              'make_ext4fs -J -L rootfs_data -l "$USERDATASIZE" "$OUTPUT.rootfs_data"\n'
+              'dd if="$OUTPUT.rootfs_data" of="$OUTPUT" bs=512 seek="$USERDATAOFFSET" conv=notrunc\n'
+              'rm -f "$OUTPUT.rootfs_data"\n', 1)
+if s == orig:
+    print('Error: gen_image_generic.sh 替换未生效, 脚本结构可能已变化', file=sys.stderr)
+    sys.exit(1)
+open(path, 'w').write(s)
+print('  [板级] 已注入 gen_image_generic.sh: rootfs_data 第三分区 (2048MiB, 卷标 rootfs_data)')
+PYEOF
 }
 
 # 1. 内核 DTS: 将自包含补丁放入 target/linux/rockchip/patches-<ver>/
