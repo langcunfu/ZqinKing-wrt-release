@@ -63,10 +63,10 @@ s = s.replace('ALIGN="$6"', 'ALIGN="$6"\nUSERDATASIZE="${USERDATASIZE:-2048}"', 
 # 2) ptgen 增加第三个分区 (rootfs_data)
 s = s.replace('-p "${ROOTFSSIZE}m"',
               '-p "${ROOTFSSIZE}m" -t "${ROOTFSPARTTYPE}" -p "${USERDATASIZE}m"', 1)
-# 3) 解析第三分区 offset/size (ptgen 输出 $5/$6)
+# 3) 解析第三分区 offset/size (ptgen 输出 $5/$6, 均为字节)
 s = s.replace('ROOTFSOFFSET="$(($3 / 512))"\nROOTFSSIZE="$(($4 / 512))"',
               'ROOTFSOFFSET="$(($3 / 512))"\nROOTFSSIZE="$(($4 / 512))"\n'
-              'USERDATAOFFSET="$(($5 / 512))"\nUSERDATASIZE="$(($6 / 512))"', 1)
+              'USERDATAOFFSET="$(($5 / 512))"\nUSERDATASIZE="$6"', 1)
 # 4) rootfs 写入后, 生成 ext4 rootfs_data 并写入第三分区
 s = s.replace('dd if="$ROOTFSIMAGE" of="$OUTPUT" bs=512 seek="$ROOTFSOFFSET" conv=notrunc\n',
               'dd if="$ROOTFSIMAGE" of="$OUTPUT" bs=512 seek="$ROOTFSOFFSET" conv=notrunc\n\n'
@@ -166,6 +166,35 @@ inject_nsy_g68_uboot() {
             { print }
         ' "$uboot_mk" > "$uboot_mk.tmp" && mv "$uboot_mk.tmp" "$uboot_mk"
         echo "  [U-Boot] 已注册 U-Boot/nsy-g68-plus-rk3568"
+    fi
+
+    # 3d. 加入 UBOOT_TARGETS 构建列表 (OpenWrt 只构建列表内的 U-Boot 设备)
+    if ! grep -q "^  nsy-g68-plus-rk3568" "$uboot_mk"; then
+        python3 - "$uboot_mk" <<'PYEOF'
+import sys
+path = sys.argv[1]
+lines = open(path).read().split('\n')
+in_list = False
+last_item = None
+for i, line in enumerate(lines):
+    if line.startswith('UBOOT_TARGETS'):
+        in_list = True
+        continue
+    if in_list:
+        st = line.strip()
+        if st == '' or not line.startswith(' '):
+            in_list = False
+        elif not line.rstrip().endswith('\\'):
+            last_item = i
+            in_list = False
+if last_item is None:
+    print('Error: 未找到 UBOOT_TARGETS 列表', file=sys.stderr)
+    sys.exit(1)
+lines[last_item] = lines[last_item].rstrip() + ' \\'
+lines.insert(last_item + 1, '  nsy-g68-plus-rk3568')
+open(path, 'w').write('\n'.join(lines))
+print('  [U-Boot] 已加入 UBOOT_TARGETS: nsy-g68-plus-rk3568')
+PYEOF
     fi
 }
 
