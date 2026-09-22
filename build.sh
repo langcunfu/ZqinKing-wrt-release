@@ -458,6 +458,37 @@ fi
 make download -j$(($(nproc) * 2))
 make -j$(($(nproc) + 1)) || make -j1 V=s
 
+# ==== 替换 U-Boot：使用 zhoufuli 原版 2024.10 U-Boot（已验证能启动，含 nsy-g68 DTB）====
+# 定位与设备匹配的原版 U-Boot 资产
+UBOOT_BLOB=""
+for cand in \
+    "$BASE_PATH/patches/nsy_g68/uboot_zhoufuli/u-boot-rockchip.bin" \
+    "$BASE_PATH/patches/nsy_g68_dsa/uboot_zhoufuli/u-boot-rockchip.bin" \
+    "$BASE_PATH/patches/uboot_zhoufuli/u-boot-rockchip.bin"; do
+    if [[ -f "$cand" ]]; then
+        UBOOT_BLOB="$cand"
+        break
+    fi
+done
+
+if [[ -n "$UBOOT_BLOB" ]]; then
+    echo "==> 使用原版 U-Boot 资产: $UBOOT_BLOB"
+    for gz in "$TARGET_DIR"/*/*squashfs-sysupgrade.img.gz "$TARGET_DIR"/*/*ext4-sysupgrade.img.gz; do
+        [[ -f "$gz" ]] || continue
+        base="${gz%.gz}"
+        if [[ ! -f "$base" ]]; then
+            gzip -dk "$gz" || true
+        fi
+        if [[ -f "$base" ]]; then
+            dd if="$UBOOT_BLOB" of="$base" bs=512 seek=64 conv=notrunc status=none
+            gzip -f "$base"
+            echo "==> 已替换 U-Boot: $(basename "$gz") ($(stat -c%s "$gz") bytes)"
+        fi
+    done
+else
+    echo "==> 警告: 未找到原版 U-Boot 资产，镜像将保留 vikingyfy 2026.07 U-Boot"
+fi
+
 FIRMWARE_DIR="$BASE_PATH/../firmware"
 \rm -rf "$FIRMWARE_DIR"
 mkdir -p "$FIRMWARE_DIR"
