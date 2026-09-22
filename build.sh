@@ -473,7 +473,8 @@ done
 
 if [[ -n "$UBOOT_BLOB" ]]; then
     echo "==> 使用原版 U-Boot 资产: $UBOOT_BLOB"
-    for gz in "$TARGET_DIR"/*/*squashfs-sysupgrade.img.gz "$TARGET_DIR"/*/*ext4-sysupgrade.img.gz; do
+    # 固件路径形如: bin/targets/<target>/<subtarget>/xxx-squashfs-sysupgrade.img.gz (两层子目录)
+    for gz in "$TARGET_DIR"/*/*/*squashfs-sysupgrade.img.gz "$TARGET_DIR"/*/*/*ext4-sysupgrade.img.gz; do
         [[ -f "$gz" ]] || continue
         base="${gz%.gz}"
         if [[ ! -f "$base" ]]; then
