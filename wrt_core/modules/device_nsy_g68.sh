@@ -34,7 +34,6 @@ add_nsy_g68_device_support() {
     inject_nsy_g68_uboot
     inject_nsy_g68_switch_driver
     inject_nsy_g68_board_files
-    inject_nsy_g68_overlay_autofix
     inject_nsy_g68_wifi_firmware
     inject_nsy_g68_partition_layout
 
@@ -305,28 +304,6 @@ inject_nsy_g68_board_files() {
         ' "$smp_file" > "$smp_file.tmp" && mv "$smp_file.tmp" "$smp_file"
         echo "  [板级] 已注入 40-net-smp-affinity"
     fi
-}
-
-# 5c-2. overlay 自动修复 preinit hook: 清除 rootfs(squashfs)尾部残留的旧 ext4 超级块,
-#      确保 mount_root 识别 FS_NONE 并自动 mkfs 完整大小的 overlay(loop0 = p2 - squashfs)。
-#      解决"p2 已是 2G 但 overlay 只有 36.8M(旧文件系统残留被 fstools 复用)"问题。
-inject_nsy_g68_overlay_autofix() {
-    local preinit_dir="$BUILD_DIR/package/base-files/files/lib/preinit"
-    local hook_src="$NSY_G68_ASSETS/board/75_nsy_fix_overlay"
-    local hook_dst="$preinit_dir/75_nsy_fix_overlay"
-
-    [[ -f "$hook_src" ]] || {
-        echo "Error: [NSY_G68] 缺少 overlay 自动修复 preinit 脚本: $hook_src" >&2
-        return 1
-    }
-    [[ -d "$preinit_dir" ]] || {
-        echo "Error: [NSY_G68] 找不到 base-files preinit 目录: $preinit_dir" >&2
-        return 1
-    }
-
-    cp "$hook_src" "$hook_dst"
-    chmod 0755 "$hook_dst"
-    echo "  [板级] 已注入 overlay 自动修复 preinit hook (75_nsy_fix_overlay)"
 }
 
 # 5c. MT7916 WiFi 校准数据: NSY G68 的 MT7916 eeprom 不在 efuse/flash 分区,
