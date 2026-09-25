@@ -34,6 +34,7 @@ add_nsy_g68_device_support() {
     inject_nsy_g68_uboot
     inject_nsy_g68_switch_driver
     inject_nsy_g68_board_files
+    inject_nsy_g68_wifi_firmware
     inject_nsy_g68_userdata_partition
 
     echo "==> [NSY_G68] 设备支持注入完成"
@@ -289,4 +290,23 @@ inject_nsy_g68_board_files() {
         ' "$smp_file" > "$smp_file.tmp" && mv "$smp_file.tmp" "$smp_file"
         echo "  [板级] 已注入 40-net-smp-affinity"
     fi
+}
+
+# 5c. MT7916 WiFi 校准数据: NSY G68 的 MT7916 eeprom 不在 efuse/flash 分区,
+#      开源 mt76 驱动 probe 时 request_firmware("mt7916_eeprom.bin") 失败
+#      -> sysfs fallback 30 秒超时 -> probe -12 (ENOMEM), WiFi 无法启动。
+#      注入 zhoufuli 仓库提取的 mt7916_eeprom.bin (4096B, 含 MT7916 magic 0x7916)。
+#      放置到 rockchip armv8 base-files 的 /lib/firmware/mediatek/ 随 rootfs 打包。
+inject_nsy_g68_wifi_firmware() {
+    local fw_dir="$BUILD_DIR/target/linux/rockchip/armv8/base-files/lib/firmware/mediatek"
+    local eeprom_src="$NSY_G68_ASSETS/firmware/mt7916_eeprom.bin"
+
+    [[ -f "$eeprom_src" ]] || {
+        echo "Error: [NSY_G68] 缺少 mt7916_eeprom.bin 资产" >&2
+        return 1
+    }
+
+    mkdir -p "$fw_dir"
+    \cp -f "$eeprom_src" "$fw_dir/mt7916_eeprom.bin"
+    echo "  [WiFi] 已注入 mt7916_eeprom.bin ($(stat -c%s "$eeprom_src")B) -> /lib/firmware/mediatek/"
 }
