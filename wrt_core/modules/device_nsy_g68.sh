@@ -72,6 +72,29 @@ if s == orig:
 open(path, 'w').write(s)
 print('  [板级] 已注入 gen_image_generic.sh: rootfs_data 第三分区 (分区表 2048MiB, 内容留空, 首次启动自动格式化 overlay)')
 PYEOF
+
+    # 3) 注入 /etc/config/fstab: 把 mmcblk0p3 (卷标 rootfs_data) 挂为 /overlay (extroot)
+    #    与 zhoufuli 老固件行为一致 (老固件 fstab 仅用 label 'rootfs_data';
+    #    这里同时给 device 做双保险)。mount_root 启动时读此配置 -> switched to extroot。
+    local fstab_dir="$BUILD_DIR/target/linux/rockchip/armv8/base-files/etc/config"
+    mkdir -p "$fstab_dir"
+    cat > "$fstab_dir/fstab" <<'FSTAB'
+config global
+	option anon_swap '0'
+	option anon_mount '0'
+	option auto_swap '1'
+	option auto_mount '1'
+	option delay_root '5'
+	option check_fs '0'
+
+config mount overlay
+	option target '/overlay'
+	option device '/dev/mmcblk0p3'
+	option label 'rootfs_data'
+	option options 'rw,noatime'
+	option enabled '1'
+FSTAB
+    echo "  [板级] 已注入 /etc/config/fstab: overlay -> /dev/mmcblk0p3 (label=rootfs_data)"
 }
 
 # 1. 内核 DTS: 将自包含补丁放入 target/linux/rockchip/patches-<ver>/
@@ -88,6 +111,14 @@ inject_nsy_g68_kernel_dts() {
     if [[ ! -f "$patch_dir/$patch_name" ]]; then
         install -m644 "$NSY_G68_ASSETS/kernel/$patch_name" "$patch_dir/$patch_name"
         echo "  [内核] 已安装 DTS 补丁 -> $patch_dir/$patch_name"
+    fi
+
+    # 调试补丁(临时): stmmac/phylink probe 逐步打印, 用于定位 fe2a0000 卡点
+    # 定位完成后删除本段 (以及 assets/kernel/910-*.patch)
+    if [[ -f "$NSY_G68_ASSETS/kernel/910-nsy-g68-debug-stmmac-phylink.patch" ]]; then
+        install -m644 "$NSY_G68_ASSETS/kernel/910-nsy-g68-debug-stmmac-phylink.patch" \
+            "$patch_dir/910-nsy-g68-debug-stmmac-phylink.patch"
+        echo "  [内核] 已安装 stmmac/phylink 调试补丁 (DBG[probe]/DBG[phylink] 打印)"
     fi
 }
 
