@@ -35,16 +35,16 @@ add_nsy_g68_device_support() {
     inject_nsy_g68_switch_driver
     inject_nsy_g68_board_files
     inject_nsy_g68_wifi_firmware
-    inject_nsy_g68_userdata_partition
+    inject_nsy_g68_partition_layout
 
     echo "==> [NSY_G68] 设备支持注入完成"
 }
 
-# 移植 zhoufuli 的 USERDATA 机制: G68 eMMC 为 256GB, OpenWrt 默认会把剩余空间
-# 全部扩展为 overlay; 这里给镜像增加第三个分区 (ext4, 卷标 rootfs_data, 固定 2048MiB),
-# OpenWrt 按卷标将其挂载为 overlay, 剩余空间保持未分配。
-# 参考: zhoufuli-rk356x/scripts/gen_image_generic.sh (USERDATASIZE)
-inject_nsy_g68_userdata_partition() {
+# 分区布局: 32MiB 内核 + 2048MiB(rootfs, squashfs) 两分区, 不建独立 userdata 分区。
+# overlay 由 mount_root 的 rootdisk 机制自动取 squashfs 尾部剩余空间 (p2 内)。
+# gen_image_generic.sh 的 PADDING 填充对大 rootfs(>=1G) 跳过, 保证固件不因填充膨胀
+# (2G rom 只写 ~155M squashfs 数据, 镜像保持 ~190M 可传入 /tmp)。
+inject_nsy_g68_partition_layout() {
     local script="$BUILD_DIR/scripts/gen_image_generic.sh"
     [[ -f "$script" ]] || {
         echo "Error: [NSY_G68] 找不到 $script" >&2
@@ -55,46 +55,17 @@ inject_nsy_g68_userdata_partition() {
 import sys
 path = sys.argv[1]
 s = open(path).read()
-if 'USERDATASIZE' in s:
-    print('  [板级] gen_image_generic.sh 已含 USERDATA 分区, 跳过')
-    sys.exit(0)
-orig = s
-# 1) 定义 USERDATA 大小 (固定 2048MiB, 分区表第三分区; 与 zhoufuli NSY 固件一致)
-s = s.replace('ALIGN="$6"', 'ALIGN="$6"\nUSERDATASIZE="${USERDATASIZE:-2048}"', 1)
-# 2) ptgen 增加第三个分区 (rootfs_data 2048MiB)
-#    注意: 分区内容留空(不写入 ext4/f2fs 数据), 镜像文件保持 ~232MiB 可传入设备 /tmp;
-#    刷机后首次启动由 fstools 检测无文件系统 -> 自动 mkfs 整个分区 -> overlay 2GiB
-s = s.replace('-p "${ROOTFSSIZE}m"',
-              '-p "${ROOTFSSIZE}m" -t "${ROOTFSPARTTYPE}" -p "${USERDATASIZE}m"', 1)
-if s == orig:
-    print('Error: gen_image_generic.sh 替换未生效, 脚本结构可能已变化', file=sys.stderr)
+# PADDING 填充加阈值: rootfs 分区 >= 1G (2097152 扇区) 时跳过零填充,
+# 避免 2048MiB rom 被 dd 成 2G+ 镜像; < 1G 的常规设备保持原行为不变。
+old = '[ -n "$PADDING" ] && dd if=/dev/zero of="$OUTPUT" bs=512 seek="$ROOTFSOFFSET" conv=notrunc count="$ROOTFSSIZE"'
+new = '[ -n "$PADDING" ] && [ "$ROOTFSSIZE" -lt 2097152 ] && dd if=/dev/zero of="$OUTPUT" bs=512 seek="$ROOTFSOFFSET" conv=notrunc count="$ROOTFSSIZE"'
+if old not in s:
+    print('Error: gen_image_generic.sh PADDING 行未匹配, 脚本结构可能已变化', file=sys.stderr)
     sys.exit(1)
+s = s.replace(old, new, 1)
 open(path, 'w').write(s)
-print('  [板级] 已注入 gen_image_generic.sh: rootfs_data 第三分区 (分区表 2048MiB, 内容留空, 首次启动自动格式化 overlay)')
+print('  [板级] gen_image_generic.sh: rootfs >=1G 跳过 PADDING 填充 (镜像不膨胀)')
 PYEOF
-
-    # 3) 注入 /etc/config/fstab: 把 mmcblk0p3 (卷标 rootfs_data) 挂为 /overlay (extroot)
-    #    与 zhoufuli 老固件行为一致 (老固件 fstab 仅用 label 'rootfs_data';
-    #    这里同时给 device 做双保险)。mount_root 启动时读此配置 -> switched to extroot。
-    local fstab_dir="$BUILD_DIR/target/linux/rockchip/armv8/base-files/etc/config"
-    mkdir -p "$fstab_dir"
-    cat > "$fstab_dir/fstab" <<'FSTAB'
-config global
-	option anon_swap '0'
-	option anon_mount '0'
-	option auto_swap '1'
-	option auto_mount '1'
-	option delay_root '5'
-	option check_fs '0'
-
-config mount overlay
-	option target '/overlay'
-	option device '/dev/mmcblk0p3'
-	option label 'rootfs_data'
-	option options 'rw,noatime'
-	option enabled '1'
-FSTAB
-    echo "  [板级] 已注入 /etc/config/fstab: overlay -> /dev/mmcblk0p3 (label=rootfs_data)"
 }
 
 # 1. 内核 DTS: 将自包含补丁放入 target/linux/rockchip/patches-<ver>/
