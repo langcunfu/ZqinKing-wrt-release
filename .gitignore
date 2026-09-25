@@ -1,4 +1,7 @@
 firmware/
+!wrt_core/patches/nsy_g68/firmware/
+!wrt_core/patches/nsy_g68/firmware/mt7916_eeprom.bin
+firmware/
 .pc/
 libwrt/
 test/
