@@ -729,6 +729,7 @@
 
 &gmac0 {
 	status = "okay";
+	/delete-node/ mdio;
 	phy-mode = "rgmii";
 	snps,reset-gpio = <&gpio1 RK_PB0 GPIO_ACTIVE_LOW>;
 	snps,reset-active-low;
