@@ -140,6 +140,12 @@ link_nn6000_wifi_cfg() {
 	configure_wifi 1 1 HT20 19 'Link_NN6000' '12345678'
 }
 
+nsy_g68_wifi_cfg() {
+	# radio0=2.4G, radio1=5G (MT7916 双频)
+	configure_wifi 0 1 HE20 20 'G68_2.4G' '12345678'
+	configure_wifi 1 36 HE80 20 'G68_5G' '12345678'
+}
+
 case "${board_name}" in
 jdcloud,ax1800-pro | \
 	jdcloud,re-ss-01)
@@ -176,6 +182,10 @@ gemtek,w1701k-ubi)
 	;;
 link,nn6000-v2)
 	link_nn6000_wifi_cfg
+	;;
+nsy,g68-plus | \
+	nsy,g68-plus-dsa)
+	nsy_g68_wifi_cfg
 	;;
 *)
 	exit 0
