@@ -8,20 +8,6 @@ set_build_signature() {
     fi
 }
 
-# 防火墙页"Routing/NAT Offloading"(软件/硬件流卸载)区块改为无条件显示。
-# 根因: zones.js 渲染时同步调用 L.hasSystemFeature('offloading'), 而 LuCI 特性探测是异步
-# (RPC -> ubus getFeatures), 页面渲染先于探测完成时拿到 null -> 区块被跳过且不重渲染。
-# 固件已编入 nft_flow_offload / xt_FLOWOFFLOAD (getFeatures 实测 offloading=true), 无需条件。
-fix_firewall_offloading_display() {
-    local zones_js="$BUILD_DIR/feeds/luci/applications/luci-app-firewall/htdocs/luci-static/resources/view/firewall/zones.js"
-    if [ -f "$zones_js" ]; then
-        sed -i "s/if *(L\.hasSystemFeature('offloading') *) *{/{/g" "$zones_js"
-        echo "已修复: 防火墙流卸载区块改为无条件显示"
-    else
-        echo "警告: 未找到 zones.js ($zones_js), 跳过流卸载显示修复" >&2
-    fi
-}
-
 update_menu_location() {
     local samba4_path="$BUILD_DIR/feeds/luci/applications/luci-app-samba4/root/usr/share/luci/menu.d/luci-app-samba4.json"
     if [ -d "$(dirname "$samba4_path")" ] && [ -f "$samba4_path" ]; then
