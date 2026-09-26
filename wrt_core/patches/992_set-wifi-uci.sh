@@ -142,8 +142,8 @@ link_nn6000_wifi_cfg() {
 
 nsy_g68_wifi_cfg() {
 	# radio0=2.4G, radio1=5G (MT7916 双频)
-	# 生成 G68 专属 hotplug: 无线接口创建后, 仅当 SSID 仍为默认 OWRT 时按频段改名。
-	# 用户已在 LuCI 自定义过 SSID 则跳过(保留), 其他设备 board_name 不匹配完全不受影响。
+	# 首启一次性: 立即遍历已生成的 iface (升级场景无线配置已存在)。
+	# 另生成一次性 hotplug: 首刷时无线配置尚未生成, 首次无线接口创建后触发设置并自删, 之后不再处理。
 	mkdir -p /etc/hotplug.d/ieee80211
 	cat > /etc/hotplug.d/ieee80211/99-g68-ssid <<'EOF'
 #!/bin/sh
@@ -163,10 +163,12 @@ case "$board_name" in
 		uci -q commit wireless
 		;;
 esac
+# 一次性: 执行完自删, 后续无线事件不再处理
+rm -f /etc/hotplug.d/ieee80211/99-g68-ssid
 exit 0
 EOF
 	chmod +x /etc/hotplug.d/ieee80211/99-g68-ssid
-	# 当前已生成的 iface 立即设置 (覆盖升级保留的默认 OWRT; 用户已自定义的保留)
+	# 当前已生成的 iface 立即设置 (仅覆盖默认 OWRT; 用户已自定义的保留)
 	for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
 		ssid=$(uci -q get wireless.$iface.ssid)
 		[ "$ssid" = "OWRT" ] || continue
