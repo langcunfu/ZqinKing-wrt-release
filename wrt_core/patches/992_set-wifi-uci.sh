@@ -142,11 +142,15 @@ link_nn6000_wifi_cfg() {
 
 nsy_g68_wifi_cfg() {
 	# radio0=2.4G, radio1=5G (MT7916 双频)
-	# SSID 无条件设置: configure_wifi 在 encryption 已有值时(非none)会 return, 导致改名不生效
-	uci -q batch <<EOF
-set wireless.default_radio0.ssid='G68_2.4G'
-set wireless.default_radio1.ssid='G68_5G'
-EOF
+	# 兜底: 遍历所有 wifi-iface 按频段无条件设置 SSID (覆盖升级保留的旧 SSID, 不受 encryption 拦截)
+	for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
+		radio=$(uci -q get wireless.$iface.device)
+		band=$(uci -q get wireless.$radio.band)
+		case "$band" in
+			2g) uci -q set wireless.$iface.ssid='G68_2.4G' ;;
+			5g) uci -q set wireless.$iface.ssid='G68_5G' ;;
+		esac
+	done
 	configure_wifi 0 1 HE20 20 'G68_2.4G' '12345678'
 	configure_wifi 1 36 HE80 20 'G68_5G' '12345678'
 }

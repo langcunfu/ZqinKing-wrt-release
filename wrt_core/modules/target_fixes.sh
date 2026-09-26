@@ -18,6 +18,22 @@ fix_default_set() {
             \cp -f "$BASE_PATH/patches/tempinfo" "$BUILD_DIR/package/emortal/autocore/files/tempinfo"
         fi
     fi
+
+    # G68(switch+DSA) 无线默认 SSID: mac80211.uc 生成无线配置时按设备/频段命名 G68_2.4G/G68_5G, 其他设备保持 OWRT
+    local mac80211_uc="$BUILD_DIR/package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc"
+    if [ -f "$mac80211_uc" ]; then
+        python3 - "$mac80211_uc" <<'PYEOF'
+import sys
+p = sys.argv[1]
+s = open(p).read()
+old = "set ${si}.ssid='${defaults?.ssid || 'OWRT'}'"
+new = "\tset ${si}.ssid='${defaults?.ssid || ((board.model.id == \"nsy,g68-plus\" || board.model.id == \"nsy,g68-plus-dsa\") ? (band_name == \"2G\" ? \"G68_2.4G\" : \"G68_5G\") : \"OWRT\")}'"
+if old in s:
+    open(p, 'w').write(s.replace(old, new))
+else:
+    print("WARN: mac80211.uc 默认SSID行未匹配, 跳过注入")
+PYEOF
+    fi
 }
 
 
