@@ -92,6 +92,7 @@ stage_pre_install_source_fixes() {
     apply_passwall_tweaks
     update_nss_pbuf_performance
     set_build_signature
+    fix_firewall_offloading_display
     update_nss_diag
     update_menu_location
     fix_compile_coremark
