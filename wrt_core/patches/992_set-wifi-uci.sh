@@ -142,6 +142,11 @@ link_nn6000_wifi_cfg() {
 
 nsy_g68_wifi_cfg() {
 	# radio0=2.4G, radio1=5G (MT7916 双频)
+	# SSID 无条件设置: configure_wifi 在 encryption 已有值时(非none)会 return, 导致改名不生效
+	uci -q batch <<EOF
+set wireless.default_radio0.ssid='G68_2.4G'
+set wireless.default_radio1.ssid='G68_5G'
+EOF
 	configure_wifi 0 1 HE20 20 'G68_2.4G' '12345678'
 	configure_wifi 1 36 HE80 20 'G68_5G' '12345678'
 }
