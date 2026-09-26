@@ -222,16 +222,34 @@ inject_nsy_g68_dsa_board_files() {
         return 1
     }
 
-    # 4a. 02_network: 第1个 esac 前插入接口定义, 第2个 esac 前插入 MAC 定义
-    if ! grep -q "nsy,g68-plus-dsa" "$net_file"; then
+    # 4a. 02_network: nsy,g68-plus-dsa 接口分支必须插在 *) 默认分支之前!
+    #      (shell case 自上而下匹配, *) 通配在 nsy 前会导致 nsy 永不执行)
+    #      MAC 分支插在第二个 case (rockchip_setup_macs) 的 *) 之前 (无 *) 则 esac 前兜底)。
+    if ! grep -q "nsy,g68-plus-dsa)" "$net_file"; then
         awk '
-            /^[[:space:]]*esac$/ && !int_done {
+            /^[[:space:]]*\*\)$/ && !int_done {
                 print "\tnsy,g68-plus-dsa)"
                 print "\t\tucidef_set_interfaces_lan_wan \"lan1 lan2 lan3 lan4\" \"wan\""
                 print "\t\t;;"
                 int_done = 1
+                print $0
+                next
             }
-            /^[[:space:]]*esac$/ && int_done && !mac_done {
+            /^[[:space:]]*\*\)$/ && int_done && !mac_done {
+                print "\tnsy,g68-plus-dsa)"
+                print "\t\twan_mac=$(macaddr_generate_from_mmc_cid mmcblk0)"
+                print "\t\tlan_mac=$(macaddr_add \"$wan_mac\" 1)"
+                print "\t\t;;"
+                mac_done = 1
+                print $0
+                next
+            }
+            /^[[:space:]]*esac$/ && int_done && !esac_seen {
+                esac_seen = 1
+                print $0
+                next
+            }
+            /^[[:space:]]*esac$/ && int_done && esac_seen && !mac_done {
                 print "\tnsy,g68-plus-dsa)"
                 print "\t\twan_mac=$(macaddr_generate_from_mmc_cid mmcblk0)"
                 print "\t\tlan_mac=$(macaddr_add \"$wan_mac\" 1)"
@@ -240,7 +258,7 @@ inject_nsy_g68_dsa_board_files() {
             }
             { print }
         ' "$net_file" > "$net_file.tmp" && mv "$net_file.tmp" "$net_file"
-        echo "  [板级] 已注入 02_network (DSA 接口/MAC)"
+        echo "  [板级] 已注入 02_network (DSA 接口/MAC, 分支位于 *) 之前)"
     fi
 
     # 4b. 40-net-smp-affinity: 末尾 esac 前插入条目
