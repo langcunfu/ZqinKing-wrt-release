@@ -11,6 +11,7 @@ fix_default_set() {
     install -Dm544 "$BASE_PATH/patches/991_custom_settings" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/991_custom_settings"
     install -Dm544 "$BASE_PATH/patches/992_set-wifi-uci.sh" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/992_set-wifi-uci.sh"
     install -Dm544 "$BASE_PATH/patches/993_usb_mount_script.sh" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/993_usb_mount_script.sh"
+    install -Dm544 "$BASE_PATH/patches/994_distfeeds_arch_fix.sh" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/994_distfeeds_arch_fix.sh"
 
     if [ -f "$BUILD_DIR/package/emortal/autocore/files/tempinfo" ]; then
         if [ -f "$BASE_PATH/patches/tempinfo" ]; then

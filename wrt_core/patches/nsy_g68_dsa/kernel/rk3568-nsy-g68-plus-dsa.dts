@@ -759,8 +759,6 @@
 		};
 	};
 };
-	status = "okay";
-};
 
 &gmac0 {
 	status = "okay";
