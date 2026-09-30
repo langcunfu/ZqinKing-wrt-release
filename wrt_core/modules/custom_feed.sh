@@ -267,9 +267,9 @@ path = sys.argv[1]
 with open(path, 'r', encoding='utf-8') as f:
     text = f.read()
 block = """define Build/Prepare
-\\trm -rf $(PKG_BUILD_DIR)
-\\tmkdir -p $(PKG_BUILD_DIR)
-\\ttar -C $(PKG_BUILD_DIR) --strip-components=1 -xzf $(DL_DIR)/$(PKG_SOURCE)
+\trm -rf $(PKG_BUILD_DIR)
+\tmkdir -p $(PKG_BUILD_DIR)
+\ttar -C $(PKG_BUILD_DIR) --strip-components=1 -xzf $(DL_DIR)/$(PKG_SOURCE)
 endef
 
 """
