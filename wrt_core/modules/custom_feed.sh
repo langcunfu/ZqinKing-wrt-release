@@ -228,6 +228,14 @@ install_custom_feed() {
         return 1
     fi
 
+    # 上游 small-package 将 linkease-common-bin 升到 1.7.6，但 istoreos
+    # release 的 tar.gz 内部目录仍是 1.7.5，install 时找不到 heif-converter。
+    # 这里补 Build/Prepare 用 strip-components 按 PKG_BUILD_DIR 解压，规避上游不同步。
+    if ! fix_linkease_common_bin_runtime "$custom_feed_dir/linkease-common-bin"; then
+        rm -rf "$custom_feed_dir"
+        return 1
+    fi
+
     register_local_feed_source "$custom_feed_dir" "$feeds_path"
 
     echo "正在更新 $custom_feed_name 本地 feed 索引..."
@@ -242,6 +250,36 @@ install_custom_feed() {
     fi
 
     echo "$custom_feed_name 指定包处理完成并已成功加载到 feeds 体系中！"
+}
+
+
+fix_linkease_common_bin_runtime() {
+    local pkg_dir="$1"
+    local makefile="$pkg_dir/Makefile"
+
+    [ -f "$makefile" ] || return 0
+    grep -q "PKG_NAME:=linkease-common-bin" "$makefile" || return 0
+    grep -q "define Build/Prepare" "$makefile" && return 0
+
+    python3 - "$makefile" <<'PY'
+import sys
+path = sys.argv[1]
+with open(path, 'r', encoding='utf-8') as f:
+    text = f.read()
+block = """define Build/Prepare
+\\trm -rf $(PKG_BUILD_DIR)
+\\tmkdir -p $(PKG_BUILD_DIR)
+\\ttar -C $(PKG_BUILD_DIR) --strip-components=1 -xzf $(DL_DIR)/$(PKG_SOURCE)
+endef
+
+"""
+anchor = "define Build/Configure"
+if block in text or anchor not in text:
+    sys.exit(0)
+text = text.replace(anchor, block + anchor, 1)
+with open(path, 'w', encoding='utf-8') as f:
+    f.write(text)
+PY
 }
 
 
