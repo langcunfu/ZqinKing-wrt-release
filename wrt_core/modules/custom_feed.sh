@@ -228,9 +228,14 @@ install_custom_feed() {
         return 1
     fi
 
-    # 上游 small-package 将 linkease-common-bin 升到 1.7.6，但 istoreos
-    # release 的 tar.gz 内部目录仍是 1.7.5，install 时找不到 heif-converter。
-    # 这里补 Build/Prepare 用 strip-components 按 PKG_BUILD_DIR 解压，规避上游不同步。
+    # 上游 small-package 将 linkease / linkease-common-bin 升到 1.7.6，但
+    # istoreos release 的 tar.gz 内部目录仍是 1.7.5（两个包都是），install
+    # 时找不到 heif-converter / linkease。补 Build/Prepare 用 strip-components
+    # 按 PKG_BUILD_DIR 解压，规避上游不同步。
+    if ! fix_linkease_common_bin_runtime "$custom_feed_dir/linkease"; then
+        rm -rf "$custom_feed_dir"
+        return 1
+    fi
     if ! fix_linkease_common_bin_runtime "$custom_feed_dir/linkease-common-bin"; then
         rm -rf "$custom_feed_dir"
         return 1
@@ -258,7 +263,7 @@ fix_linkease_common_bin_runtime() {
     local makefile="$pkg_dir/Makefile"
 
     [ -f "$makefile" ] || return 0
-    grep -q "PKG_NAME:=linkease-common-bin" "$makefile" || return 0
+    grep -qE "PKG_NAME:=(linkease|linkease-common-bin)$" "$makefile" || return 0
     grep -q "define Build/Prepare" "$makefile" && return 0
 
     python3 - "$makefile" <<'PY'
