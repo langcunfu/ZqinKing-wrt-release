@@ -14,12 +14,7 @@ on:
           - aliyun_ap8220_libwrt
           - cmcc_rax3000m_immwrt
           - gemtek_w1701k_immwrt
-          - jdcloud_ax6000_immwrt
-          - clx_s20p_immwrt
-          - MEDIATEK-WIFI-NO
-          - MEDIATEK-WIFI-YES
-          - MEDIATEK-WIFI-YES_dae
-          - NSY_G68_immwrt
+          - jdcloud_ax6000_immwrt        
           - jdcloud_ipq60xx_immwrt
           - jdcloud_ipq60xx_immwrt_dae
           - jdcloud_ipq60xx_libwrt
