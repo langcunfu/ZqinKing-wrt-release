@@ -8,33 +8,10 @@ on:
         required: true
         description: Device Model
         type: choice
-        default: jdcloud_ipq60xx_immwrt
+        default: NSY_G68_immwrt
         options:
-          - aliyun_ap8220_immwrt
-          - aliyun_ap8220_libwrt
-          - cmcc_rax3000m_immwrt
-          - gemtek_w1701k_immwrt
-          - jdcloud_ax6000_immwrt
-          - clx_s20p_immwrt
-          - MEDIATEK-WIFI-NO
-          - MEDIATEK-WIFI-YES
-          - MEDIATEK-WIFI-YES_dae
           - NSY_G68_immwrt
           - NSY_G68_dsa
-          - jdcloud_ipq60xx_immwrt
-          - jdcloud_ipq60xx_immwrt_dae
-          - jdcloud_ipq60xx_libwrt
-          - link_nn6000v2_immwrt
-          - linksys_mx4x00_immwrt
-          - n1_immwrt
-          - qihoo_360v6_immwrt
-          - redmi_ax5_immwrt
-          - redmi_ax6_immwrt
-          - redmi_ax6_libwrt
-          - redmi_ax6000_immwrt21
-          - zn_m2_immwrt
-          - zn_m2_libwrt
-          - x64_immwrt
       add_fragments:
         required: false
         description: Add config fragments, comma separated
