@@ -43,6 +43,7 @@ source "$SCRIPT_DIR/modules/package_source_updates.sh"
 source "$SCRIPT_DIR/modules/target_fixes.sh"
 source "$SCRIPT_DIR/modules/device_nsy_g68.sh"
 source "$SCRIPT_DIR/modules/device_nsy_g68_dsa.sh"
+source "$SCRIPT_DIR/modules/device_jdcloud_dae.sh"
 source "$SCRIPT_DIR/modules/luci_fixes.sh"
 source "$SCRIPT_DIR/modules/service_fixes.sh"
 
@@ -122,6 +123,8 @@ stage_pre_install_source_fixes() {
     add_nsy_g68_device_support
     # NSY G68-PLUS DSA 变体注入 (仅 NSY_G68_dsa 生效)
     add_nsy_g68_dsa_device_support
+    # jdcloud_ipq60xx_immwrt_dae: KERNEL_SIZE 6144k->12288k 补丁 (仅该设备生效)
+    add_jdcloud_dae_kernel_size_patch
     # 上游失效补丁清理: VIKINGYFY rockchip/800-hwrng 的修复已合入 6.18.52 主线,
     # 保留会导致所有 rockchip 目标内核补丁应用失败, 构建时禁用。
     disable_stale_hwrng_patch
