@@ -12,6 +12,7 @@ on:
         options:
           - NSY_G68_immwrt
           - NSY_G68_dsa
+          - NSY_G18_pro_immwrt
       add_fragments:
         required: false
         description: Add config fragments, comma separated
