@@ -119,6 +119,8 @@ stage_pre_install_source_fixes() {
     fix_easytier_mk
     remove_attendedsysupgrade
     fix_kconfig_recursive_dependency
+    # VIKINGYFY 上游 900 patch 的 he_mu_edca 无条件访问修复 (所有设备生效, 11ax 行为不变)
+    fix_hostapd_he_muedca_compile
 
     # NSY G68-PLUS 设备支持注入 (仅 NSY_G68_immwrt 生效)
     add_nsy_g68_device_support

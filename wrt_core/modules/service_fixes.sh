@@ -392,3 +392,41 @@ update_uwsgi_limit_as() {
         sed -i 's/^limit-as = .*/limit-as = 8192/g' "$webui_ini"
     fi
 }
+
+# VIKINGYFY 上游 900-hostapd-update-muedca-params.patch 在 4 处无条件访问
+# conf->he_mu_edca, 未用 #ifdef CONFIG_IEEE80211AX 保护。11ax 设备编译时
+# 成员存在不受影响; 无 11ax 的目标(如 G18 Pro / MT7615 开源 WiFi)会报
+# "'struct hostapd_config' has no member named 'he_mu_edca'"。
+# 901 补丁把 4 处访问包进 #ifdef, 对 11ax 设备行为零变化, 对所有设备生效。
+fix_hostapd_he_muedca_compile() {
+    local patch_src="$SCRIPT_DIR/patches/hostapd_fix/901-hostapd-fix-he-muedca-compile.patch"
+    local patch_dir="$BUILD_DIR/package/network/services/hostapd/patches"
+    local patch_dst="$patch_dir/901-hostapd-fix-he-muedca-compile.patch"
+
+    if [ ! -f "$patch_src" ]; then
+        echo "错误: hostapd 901 补丁不存在: $patch_src" >&2
+        return 1
+    fi
+
+    if [ ! -d "$patch_dir" ]; then
+        echo "错误: hostapd patches 目录不存在: $patch_dir" >&2
+        return 1
+    fi
+
+    # 已应用则跳过(幂等)。
+    if [ -f "$patch_dst" ]; then
+        echo "hostapd MU-EDCA 编译修复已存在, 跳过"
+        return 0
+    fi
+
+    echo "正在注入 hostapd MU-EDCA 编译修复补丁 (901)..."
+    cp -f "$patch_src" "$patch_dst"
+
+    if [ -f "$patch_dst" ]; then
+        echo "hostapd MU-EDCA 编译修复注入成功: $(basename "$patch_dst")"
+        return 0
+    else
+        echo "错误: hostapd MU-EDCA 编译修复注入失败" >&2
+        return 1
+    fi
+}
