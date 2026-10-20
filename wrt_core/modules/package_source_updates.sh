@@ -239,12 +239,12 @@ add_quickfile() {
 
 
 update_argon() {
-    local repo_url="https://github.com/langcunfu/luci-theme-argon.git"
+    local repo_url="https://github.com/jerrykuku/luci-theme-argon.git"
     local dst_theme_path="$BUILD_DIR/feeds/luci/themes/luci-theme-argon"
     local tmp_dir
     tmp_dir=$(mktemp -d)
 
-    echo "正在更新 argon 主题..."
+    echo "正在更新 argon 主题 (jerrykuku 官方源)..."
 
     if ! git_retry clone --depth 1 "$repo_url" "$tmp_dir"; then
         echo "错误：从 $repo_url 克隆 argon 主题仓库失败" >&2

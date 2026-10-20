@@ -430,3 +430,56 @@ fix_hostapd_he_muedca_compile() {
         return 1
     fi
 }
+
+# luci-theme-argon (官方源 jerrykuku, LUCI_BASENAME=argon-config, v3.0.0) 与
+# 上游 luci 的 luci-app-argon-config (26.293, 上游近期新增) 会产出同名翻译包
+# luci-i18n-argon-config-zh-cn。opkg 版本排序 26.293 > v3.0.0, rootfs 安装时
+# 选择 26.293 版, 其依赖 luci-app-argon-config 主包, 而该主包未被选择安装
+# -> "cannot find dependency luci-app-argon-config" -> package/install
+# Error 255 构建失败 (G68 run 39535281197 实证)。
+#
+# 已证事实 (G18 run 39517429254 固件 manifest 实证): theme 官方源 v3.0.0 的
+# i18n (luci-i18n-argon-config-zh-cn v3.0.0) 只依赖 luci-theme-argon, 不依赖
+# luci-app-argon-config 主包; G18 固件无 luci-app-argon-config 主包也装成功。
+# 因此只需消除 26.293 覆盖源即可, 无需安装任何额外主包。
+#
+# 修复 (保留中文, 所有设备生效):
+#   1) 删除上游 luci-app-argon-config 整个包目录。26.293 的 i18n/主包定义
+#      一并消失, bin 不再产出 26.293 i18n, 不会覆盖 theme 的 v3.0.0;
+#      feeds install -a -f 时唯一 luci-app-argon-config 定义来源 =
+#      luci-theme-argon 内置 compat/ (即使被收集也无害, 固件不安装它)。
+#   2) 保留 luci-theme-argon 的所有 argon-config.po (v3.0.0 中文翻译保留)。
+#   3) touch theme 与 compat 的 Makefile, 强制 feeds 重扫。
+# 结果: 所有设备的 luci-i18n-argon-config-zh-cn 稳定为 v3.0.0 (theme 版),
+# 依赖 luci-theme-argon (已装), 编译成功且 argon 配置界面保持中文。
+fix_argon_config_i18n_duplicate() {
+    local app_dir="$BUILD_DIR/feeds/luci/applications/luci-app-argon-config"
+    local theme_dir="$BUILD_DIR/feeds/luci/themes/luci-theme-argon"
+    local compat_mk="$theme_dir/compat/luci-app-argon-config/Makefile"
+    local changed=0
+
+    # 1) 上游 luci-app-argon-config: 删除整个包目录 (26.293 定义与 i18n 产出源)。
+    if [ -d "$app_dir" ]; then
+        echo "正在移除上游 luci-app-argon-config 包目录 (消除 26.293 冲突源)..."
+        rm -rf "$app_dir"
+        changed=1
+    fi
+
+    # 2) touch theme Makefile 与 compat Makefile, 强制 feeds 重扫。
+    if [ -f "$theme_dir/Makefile" ]; then
+        touch "$theme_dir/Makefile"
+        changed=1
+    fi
+    if [ -f "$compat_mk" ]; then
+        touch "$compat_mk"
+        changed=1
+    fi
+
+    if [ "$changed" -eq 1 ]; then
+        echo "argon i18n 冲突修复完成: 上游 app 已移除, theme 中文翻译保留, compat 已 touch 触发重扫"
+    else
+        echo "argon i18n 冲突修复: 上游 app 不存在 (已修复或结构变化), 跳过"
+    fi
+
+    return 0
+}

@@ -121,6 +121,9 @@ stage_pre_install_source_fixes() {
     fix_kconfig_recursive_dependency
     # VIKINGYFY 上游 900 patch 的 he_mu_edca 无条件访问修复 (所有设备生效, 11ax 行为不变)
     fix_hostapd_he_muedca_compile
+    # luci-theme-argon (LUCI_BASENAME=argon-config) 与上游 luci-app-argon-config
+    # 同名 i18n 冲突修复: 移除上游 app 包 + theme 侧 argon-config.po 并强制重扫 (所有设备生效)
+    fix_argon_config_i18n_duplicate
 
     # NSY G68-PLUS 设备支持注入 (仅 NSY_G68_immwrt 生效)
     add_nsy_g68_device_support
