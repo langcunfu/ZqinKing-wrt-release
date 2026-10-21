@@ -183,6 +183,23 @@ EOF
 	configure_wifi 1 36 HE80 20 'G68_5G' '12345678'
 }
 
+# G18 Pro (BDY): 每台机器唯一的 WiFi MAC (eMMC CID 派生)。
+# 固件 DTS 固化了标准 eeprom (含固定 MAC), 多台同固件会导致 BSSID/MAC 冲突;
+# 这里按 eMMC CID 生成唯一 MAC 写入 vif (BSSID), 只影响 G18, 首启/重置后执行一次。
+nsy_g18_wifi_cfg() {
+	. /lib/functions/system.sh
+	local mac
+	mac=$(macaddr_generate_from_mmc_cid mmcblk0 2>/dev/null)
+	[ -z "$mac" ] && return 0
+	# 无线配置尚未生成(无 vif)时跳过, 不预创建以免干扰 wifi-detect
+	uci -q get wireless.default_radio0 >/dev/null || return 0
+	# 已配置过则跳过(保护用户自定义)
+	[ -n "$(uci -q get wireless.default_radio0.macaddr)" ] && return 0
+	uci -q set wireless.default_radio0.macaddr="$mac"
+	uci -q get wireless.default_radio1 >/dev/null && \
+		uci -q set wireless.default_radio1.macaddr="$(macaddr_add "$mac" 1)"
+}
+
 case "${board_name}" in
 jdcloud,ax1800-pro | \
 	jdcloud,re-ss-01)
@@ -223,6 +240,9 @@ link,nn6000-v2)
 nsy,g68-plus | \
 	nsy,g68-plus-dsa)
 	nsy_g68_wifi_cfg
+	;;
+bdy,g18-pro)
+	nsy_g18_wifi_cfg
 	;;
 *)
 	exit 0
