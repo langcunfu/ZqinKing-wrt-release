@@ -79,9 +79,11 @@ inject_nsy_g18_kernel_dts() {
         return 1
     }
 
-    if [[ ! -f "$patch_dir/$patch_name" ]]; then
+    if [[ ! -f "$patch_dir/$patch_name" ]] || ! grep -q "mediatek,eeprom-data" "$patch_dir/$patch_name"; then
         install -m644 "$NSY_G18_ASSETS/kernel/$patch_name" "$patch_dir/$patch_name"
         echo "  [内核] 已安装 DTS 补丁 -> $patch_dir/$patch_name"
+    else
+        echo "  [内核] DTS 补丁已存在且含 eeprom 固化, 跳过"
     fi
 }
 
