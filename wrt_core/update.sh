@@ -119,7 +119,6 @@ stage_pre_install_source_fixes() {
     fix_easytier_mk
     remove_attendedsysupgrade
     fix_kconfig_recursive_dependency
-    # VIKINGYFY 上游 900 patch 的 he_mu_edca 无条件访问修复 (所有设备生效, 11ax 行为不变)
     # luci-theme-argon (LUCI_BASENAME=argon-config) 与上游 luci-app-argon-config
     # 同名 i18n 冲突修复: 移除上游 app 包 + theme 侧 argon-config.po 并强制重扫 (所有设备生效)
     fix_argon_config_i18n_duplicate
