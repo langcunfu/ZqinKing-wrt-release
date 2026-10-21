@@ -183,21 +183,66 @@ EOF
 	configure_wifi 1 36 HE80 20 'G68_5G' '12345678'
 }
 
-# G18 Pro (BDY): 每台机器唯一的 WiFi MAC (eMMC CID 派生)。
-# 固件 DTS 固化了标准 eeprom (含固定 MAC), 多台同固件会导致 BSSID/MAC 冲突;
-# 这里按 eMMC CID 生成唯一 MAC 写入 vif (BSSID), 只影响 G18, 首启/重置后执行一次。
+# G18 Pro (BDY): radio0=2.4G, radio1=5G (MT7615 双频)
+# 与 G68 同方式: 首启一次性 (立即遍历已生成 iface + 一次性 hotplug 兜底首刷) + configure_wifi。
+# 额外: 每台机器唯一 WiFi MAC (eMMC CID 派生), 避免多台同固件 BSSID/MAC 冲突。
 nsy_g18_wifi_cfg() {
 	. /lib/functions/system.sh
 	local mac
 	mac=$(macaddr_generate_from_mmc_cid mmcblk0 2>/dev/null)
-	[ -z "$mac" ] && return 0
-	# 无线配置尚未生成(无 vif)时跳过, 不预创建以免干扰 wifi-detect
-	uci -q get wireless.default_radio0 >/dev/null || return 0
-	# 已配置过则跳过(保护用户自定义)
-	[ -n "$(uci -q get wireless.default_radio0.macaddr)" ] && return 0
-	uci -q set wireless.default_radio0.macaddr="$mac"
-	uci -q get wireless.default_radio1 >/dev/null && \
-		uci -q set wireless.default_radio1.macaddr="$(macaddr_add "$mac" 1)"
+
+	mkdir -p /etc/hotplug.d/ieee80211
+	cat > /etc/hotplug.d/ieee80211/99-g18-wifi <<'EOF'
+#!/bin/sh
+board_name=$(cat /tmp/sysinfo/board_name 2>/dev/null)
+case "$board_name" in
+	bdy,g18-pro)
+		. /lib/functions/system.sh
+		g18_mac=$(macaddr_generate_from_mmc_cid mmcblk0 2>/dev/null)
+		# SSID (仅覆盖默认 OWRT; 用户已自定义的保留)
+		for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
+			ssid=$(uci -q get wireless.$iface.ssid)
+			[ "$ssid" = "OWRT" ] || continue
+			radio=$(uci -q get wireless.$iface.device)
+			band=$(uci -q get wireless.$radio.band)
+			case "$band" in
+				2g) uci -q set wireless.$iface.ssid='G18_2.4G' ;;
+				5g) uci -q set wireless.$iface.ssid='G18_5G' ;;
+			esac
+		done
+		# 唯一 MAC (BSSID)
+		if [ -n "$g18_mac" ] && [ -z "$(uci -q get wireless.default_radio0.macaddr)" ]; then
+			uci -q set wireless.default_radio0.macaddr="$g18_mac"
+			uci -q get wireless.default_radio1 >/dev/null && \
+				uci -q set wireless.default_radio1.macaddr="$(macaddr_add "$g18_mac" 1)"
+		fi
+		uci -q commit wireless
+		;;
+esac
+# 一次性: 执行完自删, 后续无线事件不再处理
+rm -f /etc/hotplug.d/ieee80211/99-g18-wifi
+exit 0
+EOF
+	chmod +x /etc/hotplug.d/ieee80211/99-g18-wifi
+	# 当前已生成的 iface 立即设置 (仅覆盖默认 OWRT; 用户已自定义的保留)
+	for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
+		ssid=$(uci -q get wireless.$iface.ssid)
+		[ "$ssid" = "OWRT" ] || continue
+		radio=$(uci -q get wireless.$iface.device)
+		band=$(uci -q get wireless.$radio.band)
+		case "$band" in
+			2g) uci -q set wireless.$iface.ssid='G18_2.4G' ;;
+			5g) uci -q set wireless.$iface.ssid='G18_5G' ;;
+		esac
+	done
+	# 唯一 MAC: 无线配置已存在时立即设置
+	if [ -n "$mac" ] && [ -z "$(uci -q get wireless.default_radio0.macaddr)" ]; then
+		uci -q set wireless.default_radio0.macaddr="$mac"
+		uci -q get wireless.default_radio1 >/dev/null && \
+			uci -q set wireless.default_radio1.macaddr="$(macaddr_add "$mac" 1)"
+	fi
+	configure_wifi 0 1 HE20 20 'G18_2.4G' '12345678'
+	configure_wifi 1 36 HE80 20 'G18_5G' '12345678'
 }
 
 case "${board_name}" in
