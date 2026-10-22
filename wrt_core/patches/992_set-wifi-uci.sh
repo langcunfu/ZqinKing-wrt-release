@@ -87,14 +87,88 @@ EOF
 }
 
 jdc_ax1800_pro_wifi_cfg() {
-	configure_wifi 0 149 HE80 20 'JDC_AX1800PRO_5G' '12345678'
-	configure_wifi 1 1 HE20 20 'JDC_AX1800PRO' '12345678'
+	# radio0=5G(ch149), radio1=2.4G(ch1)
+	# 与 G68 同方式: 首启一次性 (立即遍历已生成 iface + 一次性 hotplug 兜底首刷)。
+	# 名称/信道保持原设置, 功率改驱动默认 (configure_wifi txpower 传空)。
+	mkdir -p /etc/hotplug.d/ieee80211
+	cat > /etc/hotplug.d/ieee80211/99-jdc-ax1800pro-wifi <<'EOF'
+#!/bin/sh
+board_name=$(cat /tmp/sysinfo/board_name 2>/dev/null)
+case "$board_name" in
+	jdcloud,ax1800-pro|jdcloud,re-ss-01)
+		for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
+			ssid=$(uci -q get wireless.$iface.ssid)
+			[ "$ssid" = "OWRT" ] || continue
+			radio=$(uci -q get wireless.$iface.device)
+			case "$radio" in
+				radio0) uci -q set wireless.$iface.ssid='JDC_AX1800PRO_5G' ;;
+				radio1) uci -q set wireless.$iface.ssid='JDC_AX1800PRO' ;;
+			esac
+		done
+		uci -q commit wireless
+		;;
+esac
+# 一次性: 执行完自删, 后续无线事件不再处理
+rm -f /etc/hotplug.d/ieee80211/99-jdc-ax1800pro-wifi
+exit 0
+EOF
+	chmod +x /etc/hotplug.d/ieee80211/99-jdc-ax1800pro-wifi
+	# 当前已生成的 iface 立即设置 (仅覆盖默认 OWRT; 用户已自定义的保留)
+	for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
+		ssid=$(uci -q get wireless.$iface.ssid)
+		[ "$ssid" = "OWRT" ] || continue
+		radio=$(uci -q get wireless.$iface.device)
+		case "$radio" in
+			radio0) uci -q set wireless.$iface.ssid='JDC_AX1800PRO_5G' ;;
+			radio1) uci -q set wireless.$iface.ssid='JDC_AX1800PRO' ;;
+		esac
+	done
+	configure_wifi 0 149 HE80 '' 'JDC_AX1800PRO_5G' '12345678'
+	configure_wifi 1 1 HE20 '' 'JDC_AX1800PRO' '12345678'
 }
 
 jdc_ax6600_wifi_cfg() {
-	configure_wifi 0 149 HE80 22 'JDC_AX6600_5G1' '12345678'
-	configure_wifi 1 1 HE20 22 'JDC_AX6600' '12345678'
-	configure_wifi 2 44 HE160 23 'JDC_AX6600_5G2' '12345678'
+	# radio0=5G1(ch149), radio1=2.4G(ch1), radio2=5G2(ch36, 原44)
+	# 与 G68 同方式: 首启一次性 (立即遍历已生成 iface + 一次性 hotplug 兜底首刷)。
+	# 名称保持原设置, 功率改驱动默认 (configure_wifi txpower 传空), radio2 信道 44->36。
+	mkdir -p /etc/hotplug.d/ieee80211
+	cat > /etc/hotplug.d/ieee80211/99-jdc-ax6600-wifi <<'EOF'
+#!/bin/sh
+board_name=$(cat /tmp/sysinfo/board_name 2>/dev/null)
+case "$board_name" in
+	jdcloud,ax6600|jdcloud,re-cs-02)
+		for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
+			ssid=$(uci -q get wireless.$iface.ssid)
+			[ "$ssid" = "OWRT" ] || continue
+			radio=$(uci -q get wireless.$iface.device)
+			case "$radio" in
+				radio0) uci -q set wireless.$iface.ssid='JDC_AX6600_5G1' ;;
+				radio1) uci -q set wireless.$iface.ssid='JDC_AX6600' ;;
+				radio2) uci -q set wireless.$iface.ssid='JDC_AX6600_5G2' ;;
+			esac
+		done
+		uci -q commit wireless
+		;;
+esac
+# 一次性: 执行完自删, 后续无线事件不再处理
+rm -f /etc/hotplug.d/ieee80211/99-jdc-ax6600-wifi
+exit 0
+EOF
+	chmod +x /etc/hotplug.d/ieee80211/99-jdc-ax6600-wifi
+	# 当前已生成的 iface 立即设置 (仅覆盖默认 OWRT; 用户已自定义的保留)
+	for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
+		ssid=$(uci -q get wireless.$iface.ssid)
+		[ "$ssid" = "OWRT" ] || continue
+		radio=$(uci -q get wireless.$iface.device)
+		case "$radio" in
+			radio0) uci -q set wireless.$iface.ssid='JDC_AX6600_5G1' ;;
+			radio1) uci -q set wireless.$iface.ssid='JDC_AX6600' ;;
+			radio2) uci -q set wireless.$iface.ssid='JDC_AX6600_5G2' ;;
+		esac
+	done
+	configure_wifi 0 149 HE80 '' 'JDC_AX6600_5G1' '12345678'
+	configure_wifi 1 1 HE20 '' 'JDC_AX6600' '12345678'
+	configure_wifi 2 36 HE160 '' 'JDC_AX6600_5G2' '12345678'
 }
 
 redmi_ax5_wifi_cfg() {
