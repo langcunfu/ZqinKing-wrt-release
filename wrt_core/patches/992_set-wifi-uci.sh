@@ -19,7 +19,7 @@ set wireless.radio${radio}.channel="${channel}"
 set wireless.radio${radio}.htmode="${htmode}"
 set wireless.radio${radio}.mu_beamformer='1'
 set wireless.radio${radio}.country='US'
-set wireless.radio${radio}.txpower="${txpower}"
+[ -n "$txpower" ] && uci -q set wireless.radio${radio}.txpower="${txpower}"
 set wireless.radio${radio}.cell_density='0'
 set wireless.radio${radio}.disabled='0'
 set wireless.default_radio${radio}.ssid="${ssid}"
@@ -245,7 +245,57 @@ EOF
 	configure_wifi 1 36 HE80 20 'G18_5G' '12345678'
 }
 
+# S20P (Super Gateway S20P, MT7986A 双频):
+#   - MEDIATEK-WIFI-YES / MEDIATEK-WIFI-YES_dae  -> supergateway_s20p (VIKINGYFY owrt, 开源 mt7915e)
+#   - clx_s20p_immwrt                             -> clx_s20p (chasey-dev 25.12, 闭源 mt_wifi, 同 S20P 硬件)
+# 与 G68 同方式: 首启一次性 (立即遍历已生成 iface + 一次性 hotplug 兜底首刷)。
+# 功率用驱动默认 (configure_wifi txpower 传空 => 跳过设置)。
+nsy_s20p_wifi_cfg() {
+	# radio0=2.4G, radio1=5G
+	mkdir -p /etc/hotplug.d/ieee80211
+	cat > /etc/hotplug.d/ieee80211/99-s20p-wifi <<'EOF'
+#!/bin/sh
+board_name=$(cat /tmp/sysinfo/board_name 2>/dev/null)
+case "$board_name" in
+	supergateway,s20p|clx,s20p)
+		for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
+			ssid=$(uci -q get wireless.$iface.ssid)
+			[ "$ssid" = "OWRT" ] || continue
+			radio=$(uci -q get wireless.$iface.device)
+			band=$(uci -q get wireless.$radio.band)
+			case "$band" in
+				2g) uci -q set wireless.$iface.ssid='S20_2.4G' ;;
+				5g) uci -q set wireless.$iface.ssid='S20_5G' ;;
+			esac
+		done
+		uci -q commit wireless
+		;;
+esac
+# 一次性: 执行完自删, 后续无线事件不再处理
+rm -f /etc/hotplug.d/ieee80211/99-s20p-wifi
+exit 0
+EOF
+	chmod +x /etc/hotplug.d/ieee80211/99-s20p-wifi
+	# 当前已生成的 iface 立即设置 (仅覆盖默认 OWRT; 用户已自定义的保留)
+	for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
+		ssid=$(uci -q get wireless.$iface.ssid)
+		[ "$ssid" = "OWRT" ] || continue
+		radio=$(uci -q get wireless.$iface.device)
+		band=$(uci -q get wireless.$radio.band)
+		case "$band" in
+			2g) uci -q set wireless.$iface.ssid='S20_2.4G' ;;
+			5g) uci -q set wireless.$iface.ssid='S20_5G' ;;
+		esac
+	done
+	configure_wifi 0 1 HE40 '' 'S20_2.4G' '12345678'
+	configure_wifi 1 36 HE80 '' 'S20_5G' '12345678'
+}
+
 case "${board_name}" in
+supergateway,s20p | \
+	clx,s20p)
+	nsy_s20p_wifi_cfg
+	;;
 jdcloud,ax1800-pro | \
 	jdcloud,re-ss-01)
 	jdc_ax1800_pro_wifi_cfg
