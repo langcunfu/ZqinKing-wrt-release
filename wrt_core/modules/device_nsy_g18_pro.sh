@@ -5,7 +5,7 @@
 # 本模块仅在构建 NSY_G18_pro_immwrt 时, 向源码树注入该设备所需的全部支持,
 # 注入逻辑与 NSY G68-PLUS (device_nsy_g68.sh) 同底板同构, 差异:
 #   - WiFi: MT7615 (kmod-mt7615e + kmod-mt7615-firmware), PCIe3x2 2-lane,
-#     不注入 eeprom (参照 zhoufuli, MT7615 用标准 mt76 firmware 包)
+#     eeprom 由 mt76 驱动补丁从固件文件加载 (6.18 of_node 为空, DTS 固化失效)
 #   - PCIe: pcie3x1 disabled, pcie3x2 enabled (reset gpio4 RK_PC4)
 #   - 交换机驱动复用 nsy_g68 资产 (同一份 rtl8367b.c/rtl8366_smi.c/头文件)
 #
@@ -30,6 +30,7 @@ add_nsy_g18_pro_device_support() {
         return 1
     }
 
+    inject_nsy_g18_mt76_eeprom
     inject_nsy_g18_kernel_dts
     inject_nsy_g18_image_def
     inject_nsy_g18_uboot
@@ -38,6 +39,48 @@ add_nsy_g18_pro_device_support() {
     inject_nsy_g18_partition_layout
 
     echo "==> [NSY_G18] 设备支持注入完成"
+}
+
+# WiFi eeprom 方案 B: 6.18 内核 dwc-pcie 枚举不关联 DT of_node (实机验证为空),
+# DTS 固化 eeprom 原理性失效。标准 eeprom(19880B, 来自 xiaom 固件 dump)改由
+# mt7615 驱动补丁在 magic 无效时从固件文件加载。
+#   - 驱动补丁 -> $BUILD_DIR/package/kernel/mt76/patches/ (OpenWrt prepare 自动应用)
+#   - eeprom.bin -> package/base-files/files/lib/firmware/mediatek/
+#     随固件 rootfs 安装(其它设备固件同样携带该文件, 但无 mt7615 驱动则不被读取, 无影响)
+inject_nsy_g18_mt76_eeprom() {
+    local mt76_pkg_dir="$BUILD_DIR/package/kernel/mt76"
+    local patch_name="900-nsy-mt7615-eeprom-file.patch"
+
+    if [[ ! -d "$mt76_pkg_dir" ]]; then
+        echo "Error: [NSY_G18] 找不到 mt76 包目录: $mt76_pkg_dir" >&2
+        return 1
+    fi
+
+    # 1) 驱动补丁放入 mt76 包 patches/ (编译 prepare 时自动应用)
+    mkdir -p "$mt76_pkg_dir/patches"
+    if [[ -f "$mt76_pkg_dir/patches/$patch_name" ]] && \
+       grep -q "mediatek/mt7615-eeprom.bin" "$mt76_pkg_dir/patches/$patch_name"; then
+        echo "  [mt76] eeprom 文件加载补丁已存在, 跳过"
+    else
+        install -m644 "$NSY_G18_ASSETS/mt76/$patch_name" \
+            "$mt76_pkg_dir/patches/$patch_name"
+        echo "  [mt76] 已安装驱动补丁 -> package/kernel/mt76/patches/$patch_name"
+    fi
+
+    # 2) 标准 eeprom 文件注入 base-files, 固件 rootfs 安装到 /lib/firmware/mediatek/
+    local bf_files="$BUILD_DIR/package/base-files/files"
+    [[ -d "$bf_files" ]] || {
+        echo "Error: [NSY_G18] 找不到 base-files files 目录: $bf_files" >&2
+        return 1
+    }
+    mkdir -p "$bf_files/lib/firmware/mediatek"
+    if [[ -f "$bf_files/lib/firmware/mediatek/mt7615-eeprom.bin" ]]; then
+        echo "  [mt76] eeprom.bin 已注入 base-files, 跳过"
+    else
+        install -m644 "$NSY_G18_ASSETS/firmware/mediatek/mt7615-eeprom.bin" \
+            "$bf_files/lib/firmware/mediatek/mt7615-eeprom.bin"
+        echo "  [mt76] eeprom.bin -> base-files/lib/firmware/mediatek/mt7615-eeprom.bin (19880B)"
+    fi
 }
 
 # 分区布局: 32MiB 内核 + 2048MiB(rootfs, squashfs) 两分区, 不建独立 userdata 分区。

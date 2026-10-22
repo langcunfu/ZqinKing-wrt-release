@@ -1,0 +1,41 @@
+diff --git a/mt7615/eeprom.c b/mt7615/eeprom.c
+index d6828e1..4e76894 100644
+--- a/mt7615/eeprom.c
++++ b/mt7615/eeprom.c
+@@ -6,6 +6,7 @@
+  */
+ 
+ #include <linux/of.h>
++#include <linux/firmware.h>
+ #include "mt7615.h"
+ #include "eeprom.h"
+ 
+@@ -81,6 +82,28 @@ static int mt7615_eeprom_load(struct mt7615_dev *dev, u32 addr)
+ 	if (ret < 0)
+ 		return ret;
+ 
++	/* NSY G18 fix: RK3568 dwc-pcie 枚举不关联 DT of_node, of/mtd/nvmem 读取
++	 * 全部失效, 芯片 efuse 数据错位(单频/随机MAC/低功率)。标准 eeprom
++	 * (19880B) 已编译进固件 /lib/firmware/mediatek/mt7615-eeprom.bin,
++	 * magic 无效时加载它。仅影响 MT7615 系列。 */
++	if (get_unaligned_le16(dev->mt76.eeprom.data) != 0x7615 &&
++	    get_unaligned_le16(dev->mt76.eeprom.data) != 0x7622 &&
++	    get_unaligned_le16(dev->mt76.eeprom.data) != 0x7663) {
++		const struct firmware *fw = NULL;
++		int fw_ret;
++
++		fw_ret = request_firmware(&fw, "mediatek/mt7615-eeprom.bin",
++					  dev->mt76.dev);
++		if (!fw_ret && fw && fw->size <= MT7615_EEPROM_FULL_SIZE) {
++			memcpy(dev->mt76.eeprom.data, fw->data, fw->size);
++			dev_info(dev->mt76.dev,
++				 "NSY: loaded standard eeprom from firmware (%zu bytes)\n",
++				 fw->size);
++		}
++		if (fw)
++			release_firmware(fw);
++	}
++
+ 	return mt7615_efuse_init(dev, addr);
+ }
+ 
