@@ -246,8 +246,7 @@ EOF
 }
 
 # S20P (Super Gateway S20P, MT7986A 双频):
-#   - MEDIATEK-WIFI-YES / MEDIATEK-WIFI-YES_dae  -> supergateway_s20p (VIKINGYFY owrt, 开源 mt7915e)
-#   - clx_s20p_immwrt                             -> clx_s20p (chasey-dev 25.12, 闭源 mt_wifi, 同 S20P 硬件)
+#   - MEDIATEK-WIFI-YES / MEDIATEK-WIFI-YES_dae -> supergateway_s20p (VIKINGYFY owrt, 开源 mt7915e)
 # 与 G68 同方式: 首启一次性 (立即遍历已生成 iface + 一次性 hotplug 兜底首刷)。
 # 功率用驱动默认 (configure_wifi txpower 传空 => 跳过设置)。
 nsy_s20p_wifi_cfg() {
@@ -257,7 +256,7 @@ nsy_s20p_wifi_cfg() {
 #!/bin/sh
 board_name=$(cat /tmp/sysinfo/board_name 2>/dev/null)
 case "$board_name" in
-	supergateway,s20p|clx,s20p)
+	supergateway,s20p)
 		for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
 			ssid=$(uci -q get wireless.$iface.ssid)
 			[ "$ssid" = "OWRT" ] || continue
@@ -292,8 +291,7 @@ EOF
 }
 
 case "${board_name}" in
-supergateway,s20p | \
-	clx,s20p)
+supergateway,s20p)
 	nsy_s20p_wifi_cfg
 	;;
 jdcloud,ax1800-pro | \
