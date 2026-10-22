@@ -124,7 +124,7 @@ EOF
 		esac
 	done
 	configure_wifi 0 149 HE80 '' 'JDC_AX1800PRO_5G' '12345678'
-	configure_wifi 1 1 HE20 '' 'JDC_AX1800PRO' '12345678'
+	configure_wifi 1 1 HE40 '' 'JDC_AX1800PRO' '12345678'
 }
 
 jdc_ax6600_wifi_cfg() {
@@ -167,7 +167,7 @@ EOF
 		esac
 	done
 	configure_wifi 0 149 HE80 '' 'JDC_AX6600_5G1' '12345678'
-	configure_wifi 1 1 HE20 '' 'JDC_AX6600' '12345678'
+	configure_wifi 1 1 HE40 '' 'JDC_AX6600' '12345678'
 	configure_wifi 2 36 HE160 '' 'JDC_AX6600_5G2' '12345678'
 }
 
