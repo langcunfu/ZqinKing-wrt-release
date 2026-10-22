@@ -253,8 +253,8 @@ EOF
 			5g) uci -q set wireless.$iface.ssid='G68_5G' ;;
 		esac
 	done
-	configure_wifi 0 1 HE20 20 'G68_2.4G' '12345678'
-	configure_wifi 1 36 HE80 20 'G68_5G' '12345678'
+	configure_wifi 0 1 HE40 '' 'G68_2.4G' '12345678'
+	configure_wifi 1 36 HE160 '' 'G68_5G' '12345678'
 }
 
 # G18 Pro (BDY): radio0=2.4G, radio1=5G (MT7615 双频)
