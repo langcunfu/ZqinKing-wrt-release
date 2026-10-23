@@ -438,7 +438,7 @@ set wireless.radio0.channel='1'
 set wireless.radio0.htmode='HE40'
 set wireless.radio0.country='US'
 set wireless.radio1.channel='36'
-set wireless.radio1.htmode='HE80'
+set wireless.radio1.htmode='HE160'
 set wireless.radio1.country='US'
 delete wireless.radio0.txpower
 delete wireless.radio1.txpower
@@ -451,7 +451,7 @@ set wireless.default_radio1.key='12345678'
 EOF
 	uci -q commit wireless
 	configure_wifi 0 1 HE40 '' 'S20_2.4G' '12345678'
-	configure_wifi 1 36 HE80 '' 'S20_5G' '12345678'
+	configure_wifi 1 36 HE160 '' 'S20_5G' '12345678'
 
 }
 
