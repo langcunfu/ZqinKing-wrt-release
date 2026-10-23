@@ -253,6 +253,18 @@ EOF
 			5g) uci -q set wireless.$iface.ssid='G68_5G' ;;
 		esac
 	done
+	# 强制设置信道/带宽/功率(绕过 configure_wifi 的 encryption 已配置跳过逻辑,
+	# 确保升级保留配置场景 HE40/HE160/功率默认也生效; uci-defaults 仅首启执行一次,
+	# 之后自动删除, 不会覆盖用户后续在路由界面的修改)
+	uci -q batch <<EOF
+set wireless.radio0.channel='1'
+set wireless.radio0.htmode='HE40'
+set wireless.radio1.channel='36'
+set wireless.radio1.htmode='HE160'
+delete wireless.radio0.txpower
+delete wireless.radio1.txpower
+EOF
+	uci -q commit wireless
 	configure_wifi 0 1 HE40 '' 'G68_2.4G' '12345678'
 	configure_wifi 1 36 HE160 '' 'G68_5G' '12345678'
 }
