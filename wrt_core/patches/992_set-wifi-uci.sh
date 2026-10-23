@@ -225,8 +225,6 @@ board_name=$(cat /tmp/sysinfo/board_name 2>/dev/null)
 case "$board_name" in
 	nsy,g68-plus|nsy,g68-plus-dsa)
 		for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
-			ssid=$(uci -q get wireless.$iface.ssid)
-			[ "$ssid" = "OWRT" ] || continue
 			radio=$(uci -q get wireless.$iface.device)
 			band=$(uci -q get wireless.$radio.band)
 			case "$band" in
@@ -242,10 +240,8 @@ rm -f /etc/hotplug.d/ieee80211/99-g68-ssid
 exit 0
 EOF
 	chmod +x /etc/hotplug.d/ieee80211/99-g68-ssid
-	# 当前已生成的 iface 立即设置 (仅覆盖默认 OWRT; 用户已自定义的保留)
+	# 当前已生成的 iface 立即设置 (首启一次性, 强制写入)
 	for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
-		ssid=$(uci -q get wireless.$iface.ssid)
-		[ "$ssid" = "OWRT" ] || continue
 		radio=$(uci -q get wireless.$iface.device)
 		band=$(uci -q get wireless.$radio.band)
 		case "$band" in
@@ -253,9 +249,9 @@ EOF
 			5g) uci -q set wireless.$iface.ssid='G68_5G' ;;
 		esac
 	done
-	# 强制设置信道/带宽/功率(绕过 configure_wifi 的 encryption 已配置跳过逻辑,
-	# 确保升级保留配置场景 HE40/HE160/功率默认也生效; uci-defaults 仅首启执行一次,
-	# 之后自动删除, 不会覆盖用户后续在路由界面的修改)
+	# 强制写入全部选项(绕过 configure_wifi 的 encryption 已配置跳过逻辑,
+	# 升级保留配置场景也生效; uci-defaults 仅首启执行一次后自删,
+	# 不会覆盖用户后续在路由界面的修改)
 	uci -q batch <<EOF
 set wireless.radio0.channel='1'
 set wireless.radio0.htmode='HE40'
@@ -263,6 +259,12 @@ set wireless.radio1.channel='36'
 set wireless.radio1.htmode='HE160'
 delete wireless.radio0.txpower
 delete wireless.radio1.txpower
+set wireless.default_radio0.ssid='G68_2.4G'
+set wireless.default_radio0.encryption='psk2+ccmp'
+set wireless.default_radio0.key='12345678'
+set wireless.default_radio1.ssid='G68_5G'
+set wireless.default_radio1.encryption='psk2+ccmp'
+set wireless.default_radio1.key='12345678'
 EOF
 	uci -q commit wireless
 	configure_wifi 0 1 HE40 '' 'G68_2.4G' '12345678'
