@@ -103,6 +103,20 @@ case "$board_name" in
 					radio1) uci -q set wireless.$iface.ssid='JDC_AX1800PRO' ;;
 			esac
 		done
+		uci -q set wireless.radio0.channel='149'
+		uci -q set wireless.radio0.htmode='HE80'
+		uci -q set wireless.radio0.country='US'
+		uci -q delete wireless.radio0.txpower
+		uci -q set wireless.radio1.channel='1'
+		uci -q set wireless.radio1.htmode='HE40'
+		uci -q set wireless.radio1.country='US'
+		uci -q delete wireless.radio1.txpower
+		uci -q set wireless.default_radio0.ssid='JDC_AX1800PRO_5G'
+		uci -q set wireless.default_radio0.encryption='psk2+ccmp'
+		uci -q set wireless.default_radio0.key='12345678'
+		uci -q set wireless.default_radio1.ssid='JDC_AX1800PRO'
+		uci -q set wireless.default_radio1.encryption='psk2+ccmp'
+		uci -q set wireless.default_radio1.key='12345678'
 		uci -q commit wireless
 		;;
 esac
@@ -111,33 +125,6 @@ rm -f /etc/hotplug.d/ieee80211/99-jdc-ax1800pro-wifi
 exit 0
 EOF
 	chmod +x /etc/hotplug.d/ieee80211/99-jdc-ax1800pro-wifi
-	# 当前已生成的 iface 立即设置 (首启一次性, 强制写入)
-	for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
-		radio=$(uci -q get wireless.$iface.device)
-		case "$radio" in
-				radio0) uci -q set wireless.$iface.ssid='JDC_AX1800PRO_5G' ;;
-				radio1) uci -q set wireless.$iface.ssid='JDC_AX1800PRO' ;;
-		esac
-	done
-	# 强制写入全部选项 (首启一次性后自删, 不影响用户后续修改)
-	uci -q set wireless.radio0.channel='149'
-	uci -q set wireless.radio0.htmode='HE80'
-	uci -q set wireless.radio0.country='US'
-	uci -q set wireless.radio1.channel='1'
-	uci -q set wireless.radio1.htmode='HE40'
-	uci -q set wireless.radio1.country='US'
-	uci -q delete wireless.radio0.txpower
-	uci -q delete wireless.radio1.txpower
-	uci -q set wireless.default_radio0.ssid='JDC_AX1800PRO_5G'
-	uci -q set wireless.default_radio0.encryption='psk2+ccmp'
-	uci -q set wireless.default_radio0.key='12345678'
-	uci -q set wireless.default_radio1.ssid='JDC_AX1800PRO'
-	uci -q set wireless.default_radio1.encryption='psk2+ccmp'
-	uci -q set wireless.default_radio1.key='12345678'
-	uci -q commit wireless
-	configure_wifi 0 149 HE80 '' 'JDC_AX1800PRO_5G' '12345678'
-	configure_wifi 1 1 HE40 '' 'JDC_AX1800PRO' '12345678'
-
 }
 
 jdc_ax6600_wifi_cfg() {
@@ -158,6 +145,27 @@ case "$board_name" in
 					radio2) uci -q set wireless.$iface.ssid='JDC_AX6600_5G2' ;;
 			esac
 		done
+		uci -q set wireless.radio0.channel='149'
+		uci -q set wireless.radio0.htmode='HE80'
+		uci -q set wireless.radio0.country='US'
+		uci -q delete wireless.radio0.txpower
+		uci -q set wireless.radio1.channel='1'
+		uci -q set wireless.radio1.htmode='HE40'
+		uci -q set wireless.radio1.country='US'
+		uci -q delete wireless.radio1.txpower
+		uci -q set wireless.radio2.channel='36'
+		uci -q set wireless.radio2.htmode='HE160'
+		uci -q set wireless.radio2.country='US'
+		uci -q delete wireless.radio2.txpower
+		uci -q set wireless.default_radio0.ssid='JDC_AX6600_5G1'
+		uci -q set wireless.default_radio0.encryption='psk2+ccmp'
+		uci -q set wireless.default_radio0.key='12345678'
+		uci -q set wireless.default_radio1.ssid='JDC_AX6600'
+		uci -q set wireless.default_radio1.encryption='psk2+ccmp'
+		uci -q set wireless.default_radio1.key='12345678'
+		uci -q set wireless.default_radio2.ssid='JDC_AX6600_5G2'
+		uci -q set wireless.default_radio2.encryption='psk2+ccmp'
+		uci -q set wireless.default_radio2.key='12345678'
 		uci -q commit wireless
 		;;
 esac
@@ -166,42 +174,6 @@ rm -f /etc/hotplug.d/ieee80211/99-jdc-ax6600-wifi
 exit 0
 EOF
 	chmod +x /etc/hotplug.d/ieee80211/99-jdc-ax6600-wifi
-	# 当前已生成的 iface 立即设置 (首启一次性, 强制写入)
-	for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
-		radio=$(uci -q get wireless.$iface.device)
-		case "$radio" in
-				radio0) uci -q set wireless.$iface.ssid='JDC_AX6600_5G1' ;;
-				radio1) uci -q set wireless.$iface.ssid='JDC_AX6600' ;;
-				radio2) uci -q set wireless.$iface.ssid='JDC_AX6600_5G2' ;;
-		esac
-	done
-	# 强制写入全部选项 (首启一次性后自删, 不影响用户后续修改)
-	uci -q set wireless.radio0.channel='149'
-	uci -q set wireless.radio0.htmode='HE80'
-	uci -q set wireless.radio0.country='US'
-	uci -q set wireless.radio1.channel='1'
-	uci -q set wireless.radio1.htmode='HE40'
-	uci -q set wireless.radio1.country='US'
-	uci -q set wireless.radio2.channel='36'
-	uci -q set wireless.radio2.htmode='HE160'
-	uci -q set wireless.radio2.country='US'
-	uci -q delete wireless.radio0.txpower
-	uci -q delete wireless.radio1.txpower
-	uci -q delete wireless.radio2.txpower
-	uci -q set wireless.default_radio0.ssid='JDC_AX6600_5G1'
-	uci -q set wireless.default_radio0.encryption='psk2+ccmp'
-	uci -q set wireless.default_radio0.key='12345678'
-	uci -q set wireless.default_radio1.ssid='JDC_AX6600'
-	uci -q set wireless.default_radio1.encryption='psk2+ccmp'
-	uci -q set wireless.default_radio1.key='12345678'
-	uci -q set wireless.default_radio2.ssid='JDC_AX6600_5G2'
-	uci -q set wireless.default_radio2.encryption='psk2+ccmp'
-	uci -q set wireless.default_radio2.key='12345678'
-	uci -q commit wireless
-	configure_wifi 0 149 HE80 '' 'JDC_AX6600_5G1' '12345678'
-	configure_wifi 1 1 HE40 '' 'JDC_AX6600' '12345678'
-	configure_wifi 2 36 HE160 '' 'JDC_AX6600_5G2' '12345678'
-
 }
 
 redmi_ax5_wifi_cfg() {
@@ -252,7 +224,7 @@ nsy_g68_wifi_cfg() {
 	# 首启一次性: 立即遍历已生成的 iface (升级场景无线配置已存在)。
 	# 另生成一次性 hotplug: 首刷时无线配置尚未生成, 首次无线接口创建后触发设置并自删, 之后不再处理。
 	mkdir -p /etc/hotplug.d/ieee80211
-	cat > /etc/hotplug.d/ieee80211/99-g68-ssid <<'EOF'
+	cat > /etc/hotplug.d/ieee80211/99-g68-wifi <<'EOF'
 #!/bin/sh
 board_name=$(cat /tmp/sysinfo/board_name 2>/dev/null)
 case "$board_name" in
@@ -265,43 +237,28 @@ case "$board_name" in
 				5g) uci -q set wireless.$iface.ssid='G68_5G' ;;
 			esac
 		done
+		uci -q set wireless.radio0.channel='1'
+		uci -q set wireless.radio0.htmode='HE40'
+		uci -q set wireless.radio0.country='US'
+		uci -q delete wireless.radio0.txpower
+		uci -q set wireless.radio1.channel='36'
+		uci -q set wireless.radio1.htmode='HE160'
+		uci -q set wireless.radio1.country='US'
+		uci -q delete wireless.radio1.txpower
+		uci -q set wireless.default_radio0.ssid='G68_2.4G'
+		uci -q set wireless.default_radio0.encryption='psk2+ccmp'
+		uci -q set wireless.default_radio0.key='12345678'
+		uci -q set wireless.default_radio1.ssid='G68_5G'
+		uci -q set wireless.default_radio1.encryption='psk2+ccmp'
+		uci -q set wireless.default_radio1.key='12345678'
 		uci -q commit wireless
 		;;
 esac
 # 一次性: 执行完自删, 后续无线事件不再处理
-rm -f /etc/hotplug.d/ieee80211/99-g68-ssid
+rm -f /etc/hotplug.d/ieee80211/99-g68-wifi
 exit 0
 EOF
-	chmod +x /etc/hotplug.d/ieee80211/99-g68-ssid
-	# 当前已生成的 iface 立即设置 (首启一次性, 强制写入)
-	for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
-		radio=$(uci -q get wireless.$iface.device)
-		band=$(uci -q get wireless.$radio.band)
-		case "$band" in
-			2g) uci -q set wireless.$iface.ssid='G68_2.4G' ;;
-			5g) uci -q set wireless.$iface.ssid='G68_5G' ;;
-		esac
-	done
-	# 强制写入全部选项(绕过 configure_wifi 的 encryption 已配置跳过逻辑,
-	# 升级保留配置场景也生效; uci-defaults 仅首启执行一次后自删,
-	# 不会覆盖用户后续在路由界面的修改)
-	uci -q set wireless.radio0.channel='1'
-	uci -q set wireless.radio0.htmode='HE40'
-	uci -q set wireless.radio0.country='US'
-	uci -q set wireless.radio1.channel='36'
-	uci -q set wireless.radio1.htmode='HE160'
-	uci -q set wireless.radio1.country='US'
-	uci -q delete wireless.radio0.txpower
-	uci -q delete wireless.radio1.txpower
-	uci -q set wireless.default_radio0.ssid='G68_2.4G'
-	uci -q set wireless.default_radio0.encryption='psk2+ccmp'
-	uci -q set wireless.default_radio0.key='12345678'
-	uci -q set wireless.default_radio1.ssid='G68_5G'
-	uci -q set wireless.default_radio1.encryption='psk2+ccmp'
-	uci -q set wireless.default_radio1.key='12345678'
-	uci -q commit wireless
-	configure_wifi 0 1 HE40 '' 'G68_2.4G' '12345678'
-	configure_wifi 1 36 HE160 '' 'G68_5G' '12345678'
+	chmod +x /etc/hotplug.d/ieee80211/99-g68-wifi
 }
 
 # G18 Pro (BDY): radio0=2.4G, radio1=5G (MT7615 双频)
@@ -338,6 +295,20 @@ case "$board_name" in
 			esac
 			done
 		done
+		uci -q set wireless.radio0.channel='1'
+		uci -q set wireless.radio0.htmode='HE20'
+		uci -q set wireless.radio0.country='US'
+		uci -q delete wireless.radio0.txpower
+		uci -q set wireless.radio1.channel='36'
+		uci -q set wireless.radio1.htmode='HE80'
+		uci -q set wireless.radio1.country='US'
+		uci -q delete wireless.radio1.txpower
+		uci -q set wireless.default_radio0.ssid='G18_2.4G'
+		uci -q set wireless.default_radio0.encryption='psk2+ccmp'
+		uci -q set wireless.default_radio0.key='12345678'
+		uci -q set wireless.default_radio1.ssid='G18_5G'
+		uci -q set wireless.default_radio1.encryption='psk2+ccmp'
+		uci -q set wireless.default_radio1.key='12345678'
 		uci -q commit wireless
 		;;
 esac
@@ -346,43 +317,6 @@ rm -f /etc/hotplug.d/ieee80211/99-g18-wifi
 exit 0
 EOF
 	chmod +x /etc/hotplug.d/ieee80211/99-g18-wifi
-	# 当前已生成的 iface 立即设置 (首启一次性, 强制写入)
-	for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
-		. /lib/functions/system.sh
-		g18_mac=$(macaddr_generate_from_mmc_cid mmcblk0 2>/dev/null)
-		if [ -n "$g18_mac" ] && [ -z "$(uci -q get wireless.default_radio0.macaddr)" ]; then
-				uci -q set wireless.default_radio0.macaddr="$g18_mac"
-				uci -q get wireless.default_radio1 >/dev/null && \
-					uci -q set wireless.default_radio1.macaddr="$(macaddr_add "$g18_mac" 1)"
-		fi
-		for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
-		radio=$(uci -q get wireless.$iface.device)
-		band=$(uci -q get wireless.$radio.band)
-		case "$band" in
-				2g) uci -q set wireless.$iface.ssid='G18_2.4G' ;;
-				5g) uci -q set wireless.$iface.ssid='G18_5G' ;;
-		esac
-		done
-	done
-	# 强制写入全部选项 (首启一次性后自删, 不影响用户后续修改)
-	uci -q set wireless.radio0.channel='1'
-	uci -q set wireless.radio0.htmode='HE20'
-	uci -q set wireless.radio0.country='US'
-	uci -q set wireless.radio1.channel='36'
-	uci -q set wireless.radio1.htmode='HE80'
-	uci -q set wireless.radio1.country='US'
-	uci -q delete wireless.radio0.txpower
-	uci -q delete wireless.radio1.txpower
-	uci -q set wireless.default_radio0.ssid='G18_2.4G'
-	uci -q set wireless.default_radio0.encryption='psk2+ccmp'
-	uci -q set wireless.default_radio0.key='12345678'
-	uci -q set wireless.default_radio1.ssid='G18_5G'
-	uci -q set wireless.default_radio1.encryption='psk2+ccmp'
-	uci -q set wireless.default_radio1.key='12345678'
-	uci -q commit wireless
-	configure_wifi 0 1 HE20 '' 'G18_2.4G' '12345678'
-	configure_wifi 1 36 HE80 '' 'G18_5G' '12345678'
-
 }
 
 # S20P (Super Gateway S20P, MT7986A 双频):
@@ -407,6 +341,20 @@ case "$board_name" in
 					5g) uci -q set wireless.$iface.ssid='S20_5G' ;;
 			esac
 		done
+		uci -q set wireless.radio0.channel='1'
+		uci -q set wireless.radio0.htmode='HE40'
+		uci -q set wireless.radio0.country='US'
+		uci -q delete wireless.radio0.txpower
+		uci -q set wireless.radio1.channel='36'
+		uci -q set wireless.radio1.htmode='HE160'
+		uci -q set wireless.radio1.country='US'
+		uci -q delete wireless.radio1.txpower
+		uci -q set wireless.default_radio0.ssid='S20_2.4G'
+		uci -q set wireless.default_radio0.encryption='psk2+ccmp'
+		uci -q set wireless.default_radio0.key='12345678'
+		uci -q set wireless.default_radio1.ssid='S20_5G'
+		uci -q set wireless.default_radio1.encryption='psk2+ccmp'
+		uci -q set wireless.default_radio1.key='12345678'
 		uci -q commit wireless
 		;;
 esac
@@ -415,34 +363,6 @@ rm -f /etc/hotplug.d/ieee80211/99-s20p-wifi
 exit 0
 EOF
 	chmod +x /etc/hotplug.d/ieee80211/99-s20p-wifi
-	# 当前已生成的 iface 立即设置 (首启一次性, 强制写入)
-	for iface in $(uci -q show wireless | grep "=wifi-iface" | sed 's/wireless\.\(.*\)=wifi-iface/\1/'); do
-		radio=$(uci -q get wireless.$iface.device)
-		band=$(uci -q get wireless.$radio.band)
-		case "$band" in
-				2g) uci -q set wireless.$iface.ssid='S20_2.4G' ;;
-				5g) uci -q set wireless.$iface.ssid='S20_5G' ;;
-		esac
-	done
-	# 强制写入全部选项 (首启一次性后自删, 不影响用户后续修改)
-	uci -q set wireless.radio0.channel='1'
-	uci -q set wireless.radio0.htmode='HE40'
-	uci -q set wireless.radio0.country='US'
-	uci -q set wireless.radio1.channel='36'
-	uci -q set wireless.radio1.htmode='HE160'
-	uci -q set wireless.radio1.country='US'
-	uci -q delete wireless.radio0.txpower
-	uci -q delete wireless.radio1.txpower
-	uci -q set wireless.default_radio0.ssid='S20_2.4G'
-	uci -q set wireless.default_radio0.encryption='psk2+ccmp'
-	uci -q set wireless.default_radio0.key='12345678'
-	uci -q set wireless.default_radio1.ssid='S20_5G'
-	uci -q set wireless.default_radio1.encryption='psk2+ccmp'
-	uci -q set wireless.default_radio1.key='12345678'
-	uci -q commit wireless
-	configure_wifi 0 1 HE40 '' 'S20_2.4G' '12345678'
-	configure_wifi 1 36 HE160 '' 'S20_5G' '12345678'
-
 }
 
 case "${board_name}" in
