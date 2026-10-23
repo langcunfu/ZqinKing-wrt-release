@@ -4,6 +4,10 @@ firmware/
 firmware/
 !wrt_core/patches/nsy_g68_dsa/firmware/
 !wrt_core/patches/nsy_g68_dsa/firmware/mt7916_eeprom.bin
+firmware/
+!wrt_core/patches/nsy_g18_pro/firmware/
+!wrt_core/patches/nsy_g18_pro/firmware/mediatek/
+!wrt_core/patches/nsy_g18_pro/firmware/mediatek/mt7615-eeprom.bin
 .pc/
 libwrt/
 test/

@@ -120,22 +120,20 @@ EOF
 		esac
 	done
 	# 强制写入全部选项 (首启一次性后自删, 不影响用户后续修改)
-	uci -q batch <<EOF
-set wireless.radio0.channel='149'
-set wireless.radio0.htmode='HE80'
-set wireless.radio0.country='US'
-set wireless.radio1.channel='1'
-set wireless.radio1.htmode='HE40'
-set wireless.radio1.country='US'
-delete wireless.radio0.txpower
-delete wireless.radio1.txpower
-set wireless.default_radio0.ssid='JDC_AX1800PRO_5G'
-set wireless.default_radio0.encryption='psk2+ccmp'
-set wireless.default_radio0.key='12345678'
-set wireless.default_radio1.ssid='JDC_AX1800PRO'
-set wireless.default_radio1.encryption='psk2+ccmp'
-set wireless.default_radio1.key='12345678'
-EOF
+	uci -q set wireless.radio0.channel='149'
+	uci -q set wireless.radio0.htmode='HE80'
+	uci -q set wireless.radio0.country='US'
+	uci -q set wireless.radio1.channel='1'
+	uci -q set wireless.radio1.htmode='HE40'
+	uci -q set wireless.radio1.country='US'
+	uci -q delete wireless.radio0.txpower
+	uci -q delete wireless.radio1.txpower
+	uci -q set wireless.default_radio0.ssid='JDC_AX1800PRO_5G'
+	uci -q set wireless.default_radio0.encryption='psk2+ccmp'
+	uci -q set wireless.default_radio0.key='12345678'
+	uci -q set wireless.default_radio1.ssid='JDC_AX1800PRO'
+	uci -q set wireless.default_radio1.encryption='psk2+ccmp'
+	uci -q set wireless.default_radio1.key='12345678'
 	uci -q commit wireless
 	configure_wifi 0 149 HE80 '' 'JDC_AX1800PRO_5G' '12345678'
 	configure_wifi 1 1 HE40 '' 'JDC_AX1800PRO' '12345678'
@@ -178,29 +176,27 @@ EOF
 		esac
 	done
 	# 强制写入全部选项 (首启一次性后自删, 不影响用户后续修改)
-	uci -q batch <<EOF
-set wireless.radio0.channel='149'
-set wireless.radio0.htmode='HE80'
-set wireless.radio0.country='US'
-set wireless.radio1.channel='1'
-set wireless.radio1.htmode='HE40'
-set wireless.radio1.country='US'
-set wireless.radio2.channel='36'
-set wireless.radio2.htmode='HE160'
-set wireless.radio2.country='US'
-delete wireless.radio0.txpower
-delete wireless.radio1.txpower
-delete wireless.radio2.txpower
-set wireless.default_radio0.ssid='JDC_AX6600_5G1'
-set wireless.default_radio0.encryption='psk2+ccmp'
-set wireless.default_radio0.key='12345678'
-set wireless.default_radio1.ssid='JDC_AX6600'
-set wireless.default_radio1.encryption='psk2+ccmp'
-set wireless.default_radio1.key='12345678'
-set wireless.default_radio2.ssid='JDC_AX6600_5G2'
-set wireless.default_radio2.encryption='psk2+ccmp'
-set wireless.default_radio2.key='12345678'
-EOF
+	uci -q set wireless.radio0.channel='149'
+	uci -q set wireless.radio0.htmode='HE80'
+	uci -q set wireless.radio0.country='US'
+	uci -q set wireless.radio1.channel='1'
+	uci -q set wireless.radio1.htmode='HE40'
+	uci -q set wireless.radio1.country='US'
+	uci -q set wireless.radio2.channel='36'
+	uci -q set wireless.radio2.htmode='HE160'
+	uci -q set wireless.radio2.country='US'
+	uci -q delete wireless.radio0.txpower
+	uci -q delete wireless.radio1.txpower
+	uci -q delete wireless.radio2.txpower
+	uci -q set wireless.default_radio0.ssid='JDC_AX6600_5G1'
+	uci -q set wireless.default_radio0.encryption='psk2+ccmp'
+	uci -q set wireless.default_radio0.key='12345678'
+	uci -q set wireless.default_radio1.ssid='JDC_AX6600'
+	uci -q set wireless.default_radio1.encryption='psk2+ccmp'
+	uci -q set wireless.default_radio1.key='12345678'
+	uci -q set wireless.default_radio2.ssid='JDC_AX6600_5G2'
+	uci -q set wireless.default_radio2.encryption='psk2+ccmp'
+	uci -q set wireless.default_radio2.key='12345678'
 	uci -q commit wireless
 	configure_wifi 0 149 HE80 '' 'JDC_AX6600_5G1' '12345678'
 	configure_wifi 1 1 HE40 '' 'JDC_AX6600' '12345678'
@@ -289,22 +285,20 @@ EOF
 	# 强制写入全部选项(绕过 configure_wifi 的 encryption 已配置跳过逻辑,
 	# 升级保留配置场景也生效; uci-defaults 仅首启执行一次后自删,
 	# 不会覆盖用户后续在路由界面的修改)
-	uci -q batch <<EOF
-set wireless.radio0.channel='1'
-set wireless.radio0.htmode='HE40'
-set wireless.radio0.country='US'
-set wireless.radio1.channel='36'
-set wireless.radio1.htmode='HE160'
-set wireless.radio1.country='US'
-delete wireless.radio0.txpower
-delete wireless.radio1.txpower
-set wireless.default_radio0.ssid='G68_2.4G'
-set wireless.default_radio0.encryption='psk2+ccmp'
-set wireless.default_radio0.key='12345678'
-set wireless.default_radio1.ssid='G68_5G'
-set wireless.default_radio1.encryption='psk2+ccmp'
-set wireless.default_radio1.key='12345678'
-EOF
+	uci -q set wireless.radio0.channel='1'
+	uci -q set wireless.radio0.htmode='HE40'
+	uci -q set wireless.radio0.country='US'
+	uci -q set wireless.radio1.channel='36'
+	uci -q set wireless.radio1.htmode='HE160'
+	uci -q set wireless.radio1.country='US'
+	uci -q delete wireless.radio0.txpower
+	uci -q delete wireless.radio1.txpower
+	uci -q set wireless.default_radio0.ssid='G68_2.4G'
+	uci -q set wireless.default_radio0.encryption='psk2+ccmp'
+	uci -q set wireless.default_radio0.key='12345678'
+	uci -q set wireless.default_radio1.ssid='G68_5G'
+	uci -q set wireless.default_radio1.encryption='psk2+ccmp'
+	uci -q set wireless.default_radio1.key='12345678'
 	uci -q commit wireless
 	configure_wifi 0 1 HE40 '' 'G68_2.4G' '12345678'
 	configure_wifi 1 36 HE160 '' 'G68_5G' '12345678'
@@ -371,22 +365,20 @@ EOF
 		done
 	done
 	# 强制写入全部选项 (首启一次性后自删, 不影响用户后续修改)
-	uci -q batch <<EOF
-set wireless.radio0.channel='1'
-set wireless.radio0.htmode='HE20'
-set wireless.radio0.country='US'
-set wireless.radio1.channel='36'
-set wireless.radio1.htmode='HE80'
-set wireless.radio1.country='US'
-delete wireless.radio0.txpower
-delete wireless.radio1.txpower
-set wireless.default_radio0.ssid='G18_2.4G'
-set wireless.default_radio0.encryption='psk2+ccmp'
-set wireless.default_radio0.key='12345678'
-set wireless.default_radio1.ssid='G18_5G'
-set wireless.default_radio1.encryption='psk2+ccmp'
-set wireless.default_radio1.key='12345678'
-EOF
+	uci -q set wireless.radio0.channel='1'
+	uci -q set wireless.radio0.htmode='HE20'
+	uci -q set wireless.radio0.country='US'
+	uci -q set wireless.radio1.channel='36'
+	uci -q set wireless.radio1.htmode='HE80'
+	uci -q set wireless.radio1.country='US'
+	uci -q delete wireless.radio0.txpower
+	uci -q delete wireless.radio1.txpower
+	uci -q set wireless.default_radio0.ssid='G18_2.4G'
+	uci -q set wireless.default_radio0.encryption='psk2+ccmp'
+	uci -q set wireless.default_radio0.key='12345678'
+	uci -q set wireless.default_radio1.ssid='G18_5G'
+	uci -q set wireless.default_radio1.encryption='psk2+ccmp'
+	uci -q set wireless.default_radio1.key='12345678'
 	uci -q commit wireless
 	configure_wifi 0 1 HE20 '' 'G18_2.4G' '12345678'
 	configure_wifi 1 36 HE80 '' 'G18_5G' '12345678'
@@ -433,22 +425,20 @@ EOF
 		esac
 	done
 	# 强制写入全部选项 (首启一次性后自删, 不影响用户后续修改)
-	uci -q batch <<EOF
-set wireless.radio0.channel='1'
-set wireless.radio0.htmode='HE40'
-set wireless.radio0.country='US'
-set wireless.radio1.channel='36'
-set wireless.radio1.htmode='HE160'
-set wireless.radio1.country='US'
-delete wireless.radio0.txpower
-delete wireless.radio1.txpower
-set wireless.default_radio0.ssid='S20_2.4G'
-set wireless.default_radio0.encryption='psk2+ccmp'
-set wireless.default_radio0.key='12345678'
-set wireless.default_radio1.ssid='S20_5G'
-set wireless.default_radio1.encryption='psk2+ccmp'
-set wireless.default_radio1.key='12345678'
-EOF
+	uci -q set wireless.radio0.channel='1'
+	uci -q set wireless.radio0.htmode='HE40'
+	uci -q set wireless.radio0.country='US'
+	uci -q set wireless.radio1.channel='36'
+	uci -q set wireless.radio1.htmode='HE160'
+	uci -q set wireless.radio1.country='US'
+	uci -q delete wireless.radio0.txpower
+	uci -q delete wireless.radio1.txpower
+	uci -q set wireless.default_radio0.ssid='S20_2.4G'
+	uci -q set wireless.default_radio0.encryption='psk2+ccmp'
+	uci -q set wireless.default_radio0.key='12345678'
+	uci -q set wireless.default_radio1.ssid='S20_5G'
+	uci -q set wireless.default_radio1.encryption='psk2+ccmp'
+	uci -q set wireless.default_radio1.key='12345678'
 	uci -q commit wireless
 	configure_wifi 0 1 HE40 '' 'S20_2.4G' '12345678'
 	configure_wifi 1 36 HE160 '' 'S20_5G' '12345678'
