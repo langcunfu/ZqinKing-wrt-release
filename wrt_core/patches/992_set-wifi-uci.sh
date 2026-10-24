@@ -268,7 +268,8 @@ nsy_g18_wifi_cfg() {
 	. /lib/functions/system.sh
 	local mac
 	mac=$(macaddr_generate_from_mmc_cid mmcblk0 2>/dev/null)
-	# radio0=2.4G(ch1/HE20), radio1=5G(ch36/HE80)
+	# radio0=2.4G(ch1/HT40-N), radio1=5G(ch36/VHT80-AC)
+	# mt7615 是 WiFi5(AC) 芯片, 不支持 HE(11ax): 设 HE 会导致无线接口起不来禁用
 	# 首启一次性全选项强制写入 (与 G68 同方式), 功率驱动默认, country=US
 	# 每台机器唯一 WiFi MAC (eMMC CID 派生)
 
@@ -296,11 +297,11 @@ case "$board_name" in
 			done
 		done
 		uci -q set wireless.radio0.channel='1'
-		uci -q set wireless.radio0.htmode='HE20'
+		uci -q set wireless.radio0.htmode='HT40'
 		uci -q set wireless.radio0.country='US'
 		uci -q delete wireless.radio0.txpower
 		uci -q set wireless.radio1.channel='36'
-		uci -q set wireless.radio1.htmode='HE80'
+		uci -q set wireless.radio1.htmode='VHT80'
 		uci -q set wireless.radio1.country='US'
 		uci -q delete wireless.radio1.txpower
 		uci -q set wireless.default_radio0.ssid='G18_2.4G'
