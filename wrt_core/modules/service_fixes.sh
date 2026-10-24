@@ -153,6 +153,14 @@ fix_netfilter_kmod_clash() {
     local include_netfilter_mk="$BUILD_DIR/include/netfilter.mk"
     local netfilter_mk="$BUILD_DIR/package/kernel/linux/modules/netfilter.mk"
 
+    # MEDIATEK-WIFI-YES / MEDIATEK-WIFI-YES_dae (owrt 分支, 无条件 +kmod-iptables) 由
+    # device_mediatek_wifi.sh 的 fix_mediatek_netfilter_kmod_clash 专用处理
+    # (删除 NF_IPT 中 ip_tables/x_tables 归属, 模块由 hidden kmod-iptables 提供),
+    # 公共 workaround 对此类设备跳过, 避免改造目标行已不存在时返回非零中断构建。
+    if [[ "$DEV_NAME" == "MEDIATEK-WIFI-YES" || "$DEV_NAME" == "MEDIATEK-WIFI-YES_dae" ]]; then
+        return 0
+    fi
+
     if [ ! -f "$include_netfilter_mk" ]; then
         echo "Netfilter include file not found: $include_netfilter_mk" >&2
         return 1

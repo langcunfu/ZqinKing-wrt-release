@@ -12,7 +12,7 @@
 # kmod-nf-ipt 本就不含这两个模块, 不受影响, 因此该修复只对 MEDIATEK 系列应用。
 
 # 入口: 由 update.sh stage_pre_install_source_fixes 调用。
-fix_netfilter_kmod_clash() {
+fix_mediatek_netfilter_kmod_clash() {
     [[ "$DEV_NAME" == "MEDIATEK-WIFI-YES" || "$DEV_NAME" == "MEDIATEK-WIFI-YES_dae" ]] || return 0
 
     local nfm="$BUILD_DIR/include/netfilter.mk"
