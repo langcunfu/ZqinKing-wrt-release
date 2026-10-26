@@ -106,7 +106,7 @@ stage_pre_install_source_fixes() {
     add_timecontrol
     add_quickfile
     update_lucky
-    fix_rust_compile_error
+    # fix_rust_compile_error  # 上游 48c1724 判定 obsolete, 已停用 (与上游一致)
     update_smartdns
     update_mwan3_fw4
     update_diskman
