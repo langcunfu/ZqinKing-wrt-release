@@ -46,7 +46,6 @@ source "$SCRIPT_DIR/modules/device_nsy_g68_dsa.sh"
 source "$SCRIPT_DIR/modules/device_nsy_g18_pro.sh"
 source "$SCRIPT_DIR/modules/device_jdcloud_dae.sh"
 source "$SCRIPT_DIR/modules/luci_fixes.sh"
-source "$SCRIPT_DIR/modules/device_mediatek_wifi.sh"
 source "$SCRIPT_DIR/modules/service_fixes.sh"
 
 
@@ -134,10 +133,9 @@ stage_pre_install_source_fixes() {
     add_nsy_g18_pro_device_support
     # jdcloud_ipq60xx_immwrt_dae: KERNEL_SIZE 6144k->12288k 补丁 (仅该设备生效)
     add_jdcloud_dae_kernel_size_patch
-    # MEDIATEK-WIFI-YES / MEDIATEK-WIFI-YES_dae: 修复 kmod-nf-ipt 与 hidden kmod-iptables 文件冲突 (仅这两个设备生效)
-    # 注意: 必须先于 service_fixes.sh 的公共 fix_netfilter_kmod_clash 执行, 否则该公共函数
-    # 会把 NF_IPT 行改造为带版本条件的 LEGACY 映射, 本函数的目标行将不存在。
-    fix_mediatek_netfilter_kmod_clash
+    # MEDIATEK-WIFI-YES / MEDIATEK-WIFI-YES_dae 与其它设备统一走公共
+    # fix_netfilter_kmod_clash (上游方案: 6.12/6.18 下 kmod-iptables 不装,
+    # 模块由 kmod-nf-ipt 打包, 消除重复文件 clash, dae/iptables 功能无损)
     fix_netfilter_kmod_clash
     # 上游失效补丁清理: VIKINGYFY rockchip/800-hwrng 的修复已合入 6.18.52 主线,
     # 保留会导致所有 rockchip 目标内核补丁应用失败, 构建时禁用。
