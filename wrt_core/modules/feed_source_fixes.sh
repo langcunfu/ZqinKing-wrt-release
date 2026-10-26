@@ -109,29 +109,31 @@ update_lucky() {
         sed -i "s/option logger '1'/option logger '0'/g" "$lucky_conf"
     fi
 
-    local version
-    version=$(find "$BASE_PATH/patches" -name "lucky_*.tar.gz" -printf "%f\n" | head -n 1 | sed -n 's/^lucky_\(.*\)_Linux.*$/\1/p')
-    if [ -z "$version" ]; then
-        echo "Warning: 未找到 lucky 补丁文件，跳过更新。" >&2
-        return 0
-    fi
-
+    # lucky 不在仓库保存二进制: 编译时动态探测 wanji 渠道 (release.66666.host)
+    # 最新版本, 改写 Makefile 的 PKG_VERSION/PKG_SOURCE/PKG_SOURCE_URL,
+    # 由 OpenWrt 标准下载机制从 wanji 源拉取最新预编译二进制。
     local makefile_path="$(get_custom_feed_worktree_dir)/lucky/Makefile"
     if [ ! -f "$makefile_path" ]; then
         echo "Warning: lucky Makefile not found. Skipping." >&2
         return 0
     fi
 
-    echo "正在更新 lucky Makefile..."
-    local patch_line="\\t[ -f \$(TOPDIR)/../wrt_core/patches/lucky_${version}_Linux_\$(LUCKY_ARCH)_wanji.tar.gz ] && install -Dm644 \$(TOPDIR)/../wrt_core/patches/lucky_${version}_Linux_\$(LUCKY_ARCH)_wanji.tar.gz \$(PKG_BUILD_DIR)/\$(PKG_NAME)_\$(PKG_VERSION)_Linux_\$(LUCKY_ARCH).tar.gz"
-
-    if grep -q "Build/Prepare" "$makefile_path"; then
-        sed -i "/Build\\/Prepare/a\\$patch_line" "$makefile_path"
-        sed -i '/wget/d' "$makefile_path"
-        echo "lucky Makefile 更新完成。"
-    else
-        echo "Warning: lucky Makefile 中未找到 'Build/Prepare'。跳过。" >&2
+    local latest
+    latest=$(curl -fsS --max-time 20 "https://release.66666.host/" 2>/dev/null | awk '/^v[0-9][A-Za-z0-9._+-]*$/ {print}' | sort -r | head -n 1 | sed 's/^v//')
+    if [ -z "$latest" ]; then
+        echo "Warning: 探测 lucky wanji 最新版本失败, 保持原 Makefile 下载。" >&2
+        return 0
     fi
+
+    echo "正在更新 lucky Makefile 指向 wanji 最新版 v$latest..."
+    sed -i \
+        -e "s/^PKG_VERSION:=.*/PKG_VERSION:=$latest/" \
+        -e "s/^PKG_SOURCE:=.*/PKG_SOURCE:=lucky_\$(PKG_VERSION)_Linux_\$(LUCKY_ARCH)_wanji.tar.gz/" \
+        -e "s#^PKG_SOURCE_URL:=.*#PKG_SOURCE_URL:=https://release.66666.host/v\$(PKG_VERSION)/\$(PKG_VERSION)_wanji#" \
+        "$makefile_path"
+    sed -i '/^PKG_HASH:=/d' "$makefile_path"
+    sed -i "/^PKG_SOURCE_URL:=/a PKG_HASH:=skip" "$makefile_path"
+    echo "lucky Makefile 更新完成 (wanji v$latest)。"
 }
 
 
@@ -234,29 +236,23 @@ fix_quickstart() {
 
 
 update_oaf_deconfig() {
-    local conf_path="$(get_custom_feed_worktree_dir)/open-app-filter/files/appfilter.config"
-    local uci_def="$(get_custom_feed_worktree_dir)/luci-app-oaf/root/etc/uci-defaults/94_feature_3.0"
-    local disable_path="$(get_custom_feed_worktree_dir)/luci-app-oaf/root/etc/uci-defaults/99_disable_oaf"
+    local init_path="$(get_custom_feed_worktree_dir)/open-app-filter/files/appfilter.init"
 
-    if [ -d "${conf_path%/*}" ] && [ -f "$conf_path" ]; then
+    if [ -f "$init_path" ]; then
         sed -i \
-            -e "s/record_enable '1'/record_enable '0'/g" \
-            -e "s/disable_hnat '1'/disable_hnat '0'/g" \
-            -e "s/auto_load_engine '1'/auto_load_engine '0'/g" \
-            "$conf_path"
-    fi
+            -e '/config appfilter appfilter/,/config macfilter macfilter/ s/option enable 1/option enable 0/' \
+            -e '/config macfilter macfilter/,/config record / s/option enable 1/option enable 0/' \
+            -e "/config record 'record'/,/config network network/ s/option enable '1'/option enable '0'/" \
+            "$init_path"
 
-    if [ -d "${uci_def%/*}" ] && [ -f "$uci_def" ]; then
-        sed -i '/\(disable_hnat\|auto_load_engine\)/d' "$uci_def"
-
-        cat >"$disable_path" <<-EOF
-#!/bin/sh
-[ "\$(uci get appfilter.global.enable 2>/dev/null)" = "0" ] && {
-    /etc/init.d/appfilter disable
-    /etc/init.d/appfilter stop
-}
-EOF
-        chmod +x "$disable_path"
+        sed -i \
+            -e '/^[[:space:]]*ensure_default_configs$/a\
+\tif [ "$(uci -q get fwx.appfilter.enable)" != "1" ] && [ "$(uci -q get fwx.macfilter.enable)" != "1" ] && [ "$(uci -q get fwx.record.enable)" != "1" ]; then' \
+            -e '/^[[:space:]]*ensure_default_configs$/a\
+\t\treturn 0' \
+            -e '/^[[:space:]]*ensure_default_configs$/a\
+\tfi' \
+            "$init_path"
     fi
 }
 
