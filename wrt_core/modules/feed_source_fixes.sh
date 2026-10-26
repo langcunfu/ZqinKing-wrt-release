@@ -112,6 +112,7 @@ update_lucky() {
     # lucky 不在仓库保存二进制: 编译时动态探测 wanji 渠道 (release.66666.host)
     # 最新版本, 改写 Makefile 的 PKG_VERSION/PKG_SOURCE/PKG_SOURCE_URL,
     # 由 OpenWrt 标准下载机制从 wanji 源拉取最新预编译二进制。
+    # 注意: wanji 根目录返回 HTML 文件服务页 (href=\"./vX.Y.Z/\"), 不能用纯文本行匹配。
     local makefile_path="$(get_custom_feed_worktree_dir)/lucky/Makefile"
     if [ ! -f "$makefile_path" ]; then
         echo "Warning: lucky Makefile not found. Skipping." >&2
@@ -119,10 +120,10 @@ update_lucky() {
     fi
 
     local latest
-    latest=$(curl -fsS --max-time 20 "https://release.66666.host/" 2>/dev/null | awk '/^v[0-9][A-Za-z0-9._+-]*$/ {print}' | sort -r | head -n 1 | sed 's/^v//')
+    latest=$(curl -fsS --max-time 20 "https://release.66666.host/" 2>/dev/null | grep -oE 'href="\.?/?v[0-9][A-Za-z0-9._+-]*/"' | grep -oE 'v[0-9][A-Za-z0-9._+-]*' | sed 's/^v//' | sort -V -r | head -n 1)
     if [ -z "$latest" ]; then
-        echo "Warning: 探测 lucky wanji 最新版本失败, 保持原 Makefile 下载。" >&2
-        return 0
+        echo "Warning: 探测 lucky wanji 最新版本失败, 回退本地 3.4.1 包兜底。"
+        latest="3.4.1"
     fi
 
     echo "正在更新 lucky Makefile 指向 wanji 最新版 v$latest..."
@@ -134,6 +135,18 @@ update_lucky() {
     sed -i '/^PKG_HASH:=/d' "$makefile_path"
     sed -i "/^PKG_SOURCE_URL:=/a PKG_HASH:=skip" "$makefile_path"
     echo "lucky Makefile 更新完成 (wanji v$latest)。"
+
+    if [ "$latest" = "3.4.1" ]; then
+        # 探测失败回退: 将本地 3.4.1 包预置到 DL_DIR, make 发现已有同名文件则跳过下载。
+        # 两个架构包都放, 由 make 按 $(LUCKY_ARCH) 展开后自行选中对应文件。
+        local dl_dir="$BUILD_DIR/dl"
+        mkdir -p "$dl_dir"
+        if \cp -f "$SCRIPT_DIR"/patches/lucky_3.4.1_Linux_*_wanji.tar.gz "$dl_dir/" 2>/dev/null; then
+            echo "本地 lucky 3.4.1 包已预置到 $dl_dir (下载兜底生效)。"
+        else
+            echo "Warning: 未找到本地 lucky 3.4.1 包 ($SCRIPT_DIR/patches/lucky_3.4.1_Linux_*_wanji.tar.gz)。" >&2
+        fi
+    fi
 }
 
 
